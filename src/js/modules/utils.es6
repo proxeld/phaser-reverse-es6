@@ -37,7 +37,11 @@ export default {
 
         return final;
     },
-    setProperty(obj, dotedString = '', value) {
+    setProperty(obj, dotedString, value = {}) {
+        if (dotedString === undefined) {
+            return obj;
+        }
+
         const props = dotedString.split('.');
         const lastProp = props.pop();
         let temp = obj;

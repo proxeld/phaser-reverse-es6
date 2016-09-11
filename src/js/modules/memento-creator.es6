@@ -53,7 +53,8 @@ export default class MementoCreator {
         }
 
         // custom behaviour for properties that need such
-        for (const [key, descriptor] of Object.entries(this.custom)) {
+        for (const key of Object.keys(this.custom)) {
+            const descriptor = this.custom[key];
             const value = descriptor.create(originator);
             utils.setProperty(data, key, value);
         }
@@ -86,7 +87,8 @@ export default class MementoCreator {
             utils.setProperty(originator, ref, memento[ref]);
         }
 
-        for (const [key, descriptor] of Object.entries(this.custom)) {
+        for (const key of Object.keys(this.custom)) {
+            const descriptor = this.custom[key];
             const value = utils.getProperty(memento, key);
             descriptor.restore(originator, value);
         }

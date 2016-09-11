@@ -27,6 +27,14 @@ import utils from '../src/js/modules/utils.es6';
 
 describe('Utils', () => {
     describe('#getProperty()', () => {
+
+        it('should default to undefined if property not defined', () => {
+            let prop = utils.getProperty({ x: 10, y: 20 });
+            expect(prop).to.eql(undefined);
+            prop = utils.getProperty({}, 'position');
+            expect(prop).to.eql(undefined);
+        });
+
         it('should be able to return shallow property', () => {
             let prop = utils.getProperty({ x: 10, y: 20 }, 'x');
             expect(prop).to.eql(10);
@@ -61,6 +69,16 @@ describe('Utils', () => {
     });
 
     describe('#setProperty()', () => {
+
+        it('value should default to {}', () => {
+            const obj = {x: 10};
+            const objCopy = Object.assign({}, obj);
+            utils.setProperty(obj);
+            expect(obj).to.eql(objCopy);
+            utils.setProperty(obj, 'x');
+            expect(obj).to.eql({ x: {} });
+        });
+
         it('should be able to set new shallow property', () => {
             const obj = utils.setProperty({ x: 10, y: 20 }, 'z', 30);
             expect(obj).to.eql({ x: 10, y: 20, z: 30 });

@@ -5,6 +5,7 @@
     "node": true
   },
   "rules": {
-    "indent": ["error", 4]
+    "indent": ["error", 4],
+    "no-prototype-builtins": 0
   }
 }

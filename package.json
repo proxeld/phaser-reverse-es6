@@ -6,6 +6,7 @@
   "license": "MIT License",
   "scripts": {
     "test": "mocha --compilers es6:babel-register --require babel-polyfill --recursive test",
+    "test-watch": "mocha --compilers es6:babel-register --require babel-polyfill --recursive --watch test",
     "watch": "gulp watch",
     "build": "gulp js",
     "build-browser-tests-bundle": "browserify test/*.es6 -o build/tests-bundle.js",
@@ -49,5 +50,8 @@
     "vinyl-buffer": "~1.0.0",
     "vinyl-source-stream": "~1.1.0",
     "watchify": "~3.7.0"
+  },
+  "dependencies": {
+    "clone": "^1.0.2"
   }
 }

@@ -109,6 +109,39 @@ describe('Memento Creator', () => {
                 constant: 'Hello, World!',
             });
         });
+
+        it('should support creating specified property with another memento creator', () => {
+            const obj = {
+                position: {
+                    x: 10,
+                    y: 20,
+                },
+                alpha: 0.14,
+            };
+
+            const subCreator = new MementoCreator({
+                properties: ['x', 'y'],
+            });
+
+            const creator = new MementoCreator({
+                properties: ['alpha'],
+                children: {
+                    position: subCreator,
+                },
+            });
+
+            const memento = creator.create(obj);
+
+            const expectedResult = {
+                alpha: 0.14,
+                position: {
+                    x: 10,
+                    y: 20
+                }
+            };
+
+            expect(memento).to.eql(expectedResult);
+        });
     });
 
     describe('#restore()', () => {
@@ -205,6 +238,29 @@ describe('Memento Creator', () => {
                 x: 10,
                 y: 29,
             });
+        });
+
+        it('should support restoring specified property with another memento creator', () => {
+            const subCreator = new MementoCreator({
+                properties: ['x', 'y'],
+            });
+
+            const creator = new MementoCreator({
+                properties: ['alpha'],
+                children: {
+                    position: subCreator,
+                },
+            });
+
+            const memento = creator.create(obj);
+
+            obj.position.x = 0;
+            obj.position.y = 0;
+            obj.alpha = 0;
+
+            creator.restore(obj, memento);
+
+            expect(obj).to.eql(objCopy);
         });
     });
 });

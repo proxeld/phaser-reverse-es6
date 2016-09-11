@@ -53,29 +53,23 @@ export default class MementoCreator {
         }
 
         // custom behaviour for properties that need such
-        for (const [key, descriptor] of Object.entries(this.custom)) {
+        for (const key of Object.keys(this.custom)) {
+            const descriptor = this.custom[key];
             const value = descriptor.create(originator);
             utils.setProperty(data, key, value);
         }
 
-        // iterate over children array and create mementos of them
-        // children have to possess their own creator
-        // for (var j = 0; j < this.children.length; ++j) {
-        //     var child = this.children[j];
-        //
-        //     var creator = phaserReverse.creatorsStore.getCreator(originator[child])
-        //     if (originator[child])
-        //         children[child] = creator.create(originator[child]);
-        // }
-        //
-        // //console.log('Saving memento', data, 'for', originator.key);
-        // // return new Memento(originator, data, refs, children)
+        for(const prop of Object.keys(this.children)) {
+            const nestedCreator = this.children[prop];
+            const nestedObj = utils.getProperty(originator, prop);
+            const memento = nestedCreator.create(nestedObj);
+            utils.setProperty(data, prop, memento);
+        }
 
         return data;
     }
 
     restore(originator, memento) {
-
 
         for (const prop of this.properties) {
             const value = clone(utils.getProperty(memento, prop));
@@ -86,21 +80,18 @@ export default class MementoCreator {
             utils.setProperty(originator, ref, memento[ref]);
         }
 
-        for (const [key, descriptor] of Object.entries(this.custom)) {
+        for (const key of Object.keys(this.custom)) {
+            const descriptor = this.custom[key];
             const value = utils.getProperty(memento, key);
             descriptor.restore(originator, value);
         }
 
-        // for (var j = 0; j < this.children.length; ++j) {
-        //     var child = this.children[j];
-        //     if (memento.originator[child]) {
-        //         var creator = phaserReverse.creatorsStore.getCreator(memento.originator[child])
-        //         creator.restore(memento.children[child])
-        //         //memento.originator[child].restoreMemento(memento.children[child]);
-        //     }
-        //
-        // }
-        //
-        //
+        for(const prop of Object.keys(this.children)) {
+            const nestedCreator = this.children[prop];
+            const nestedObj = utils.getProperty(originator, prop);
+            const nestedMemento = utils.getProperty(memento, prop);
+            nestedCreator.restore(nestedObj, nestedMemento);
+            utils.setProperty(originator, prop, nestedObj);
+        }
     }
 }

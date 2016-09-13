@@ -24,7 +24,7 @@ describe('Memento Creator', () => {
     describe('#create()', () => {
         it('should be able to extract shallow property', () => {
             creator = new MementoCreator({
-                properties: ['alpha'],
+                primitives: ['alpha'],
             });
             const memento = creator.create(obj);
 
@@ -33,25 +33,25 @@ describe('Memento Creator', () => {
 
         it('should be able to extract deep property', () => {
             creator = new MementoCreator({
-                properties: ['position.x'],
+                primitives: ['position.x'],
             });
             const memento = creator.create(obj);
 
             expect(memento).to.eql({ position: { x: 10 } });
         });
 
-        it('should be able to extract multiple properties on different levels', () => {
+        it('should be able to extract multiple primitives on different levels', () => {
             creator = new MementoCreator({
-                properties: ['position.x', 'position.y', 'visible'],
+                primitives: ['position.x', 'position.y', 'visible'],
             });
             const memento = creator.create(obj);
 
             expect(memento).to.eql({ position: { x: 10, y: 29 }, visible: true });
         });
 
-        it('should clone properties which are objects', () => {
+        it('should clone primitives which are objects', () => {
             creator = new MementoCreator({
-                properties: ['position'],
+                primitives: ['position'],
             });
             const memento = creator.create(obj);
 
@@ -120,12 +120,12 @@ describe('Memento Creator', () => {
             };
 
             const subCreator = new MementoCreator({
-                properties: ['x', 'y'],
+                primitives: ['x', 'y'],
             });
 
             const creator = new MementoCreator({
-                properties: ['alpha'],
-                children: {
+                primitives: ['alpha'],
+                nested: {
                     position: subCreator,
                 },
             });
@@ -147,7 +147,7 @@ describe('Memento Creator', () => {
     describe('#restore()', () => {
         it('should be able to restore shallow property', () => {
             creator = new MementoCreator({
-                properties: ['alpha'],
+                primitives: ['alpha'],
             });
             const memento = creator.create(obj);
 
@@ -158,7 +158,7 @@ describe('Memento Creator', () => {
 
         it('should be able to restore deep property', () => {
             creator = new MementoCreator({
-                properties: ['position.x'],
+                primitives: ['position.x'],
             });
             const memento = creator.create(obj);
 
@@ -170,9 +170,9 @@ describe('Memento Creator', () => {
             });
         });
 
-        it('should be able to restore multiple properties on different levels', () => {
+        it('should be able to restore multiple primitives on different levels', () => {
             creator = new MementoCreator({
-                properties: ['position.x', 'position.y', 'visible'],
+                primitives: ['position.x', 'position.y', 'visible'],
             });
             const memento = creator.create(obj);
 
@@ -184,9 +184,9 @@ describe('Memento Creator', () => {
             expect(obj).to.eql(objCopy);
         });
 
-        it('should clone properties which are objects', () => {
+        it('should clone primitives which are objects', () => {
             creator = new MementoCreator({
-                properties: ['position'],
+                primitives: ['position'],
             });
             const memento = creator.create(obj);
 
@@ -242,12 +242,12 @@ describe('Memento Creator', () => {
 
         it('should support restoring specified property with another memento creator', () => {
             const subCreator = new MementoCreator({
-                properties: ['x', 'y'],
+                primitives: ['x', 'y'],
             });
 
             const creator = new MementoCreator({
-                properties: ['alpha'],
-                children: {
+                primitives: ['alpha'],
+                nested: {
                     position: subCreator,
                 },
             });

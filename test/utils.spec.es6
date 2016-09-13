@@ -35,6 +35,14 @@ describe('Utils', () => {
             expect(prop).to.eql(undefined);
         });
 
+        it('should return default value if property does not exist in the object', () => {
+            const obj = { visible: true };
+
+            expect(utils.getProperty(obj, 'position.x', 10)).to.eql(10);
+            expect(utils.getProperty(obj, 'alpha', 0.51)).to.eql(0.51);
+            expect(utils.getProperty(obj, 'visible.sub', false)).to.eql(false);
+        });
+
         it('should be able to return shallow property', () => {
             let prop = utils.getProperty({ x: 10, y: 20 }, 'x');
             expect(prop).to.eql(10);

@@ -23,7 +23,7 @@
  */
 
 export default {
-    getProperty(obj, dottedString = '') {
+    getProperty(obj, dottedString = '', fallbackValue) {
         const props = dottedString.split('.');
         let final = obj;
 
@@ -31,7 +31,7 @@ export default {
             if (final.hasOwnProperty(part)) {
                 final = final[part];
             } else {
-                return undefined;
+                return fallbackValue;
             }
         }
 

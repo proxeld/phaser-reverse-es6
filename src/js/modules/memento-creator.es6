@@ -24,22 +24,27 @@
 import clone from 'clone';
 import utils from './utils.es6';
 
+// property is a common name for all primitives, refs, nested, custom and arrays
+// primitives does not necessarily be primitive values (they will be copied regardless of the type)
+const configDefault = {
+    primitives: [],
+    refs: [],
+    nested: {},
+    custom: {},
+    arrays: {},
+};
+
 export default class MementoCreator {
-    constructor(conf) {
-        this.properties = conf.properties || [];
-        this.refs = conf.refs || [];
-        this.children = conf.children || [];
-        this.custom = conf.custom || {};
+    constructor(config) {
+        this.config = Object.assign({}, configDefault, config);
     }
 
     create(originator) {
         const data = {};
-        const children = {};
-        const refs = {};
 
-        // iterate over properties of originator and clone them into the memento
-        // properties should be primitive values or small objects with only few properties
-        for (const prop of this.properties) {
+        // iterate over primitives of originator and clone them into the memento
+        // primitives should be primitive values or small objects with only few properties
+        for (const prop of this.config.primitives) {
             // property cannot be circular object
             const value = clone(utils.getProperty(originator, prop), false);
             utils.setProperty(data, prop, value);
@@ -47,20 +52,20 @@ export default class MementoCreator {
 
         // copy references, not their values
         // this can prevent garbage collection
-        for (const ref of this.refs) {
+        for (const ref of this.config.refs) {
             const value = utils.getProperty(originator, ref);
             utils.setProperty(data, ref, value);
         }
 
         // custom behaviour for properties that need such
-        for (const key of Object.keys(this.custom)) {
-            const descriptor = this.custom[key];
+        for (const key of Object.keys(this.config.custom)) {
+            const descriptor = this.config.custom[key];
             const value = descriptor.create(originator);
             utils.setProperty(data, key, value);
         }
 
-        for(const prop of Object.keys(this.children)) {
-            const nestedCreator = this.children[prop];
+        for(const prop of Object.keys(this.config.nested)) {
+            const nestedCreator = this.config.nested[prop];
             const nestedObj = utils.getProperty(originator, prop);
             const memento = nestedCreator.create(nestedObj);
             utils.setProperty(data, prop, memento);
@@ -71,23 +76,23 @@ export default class MementoCreator {
 
     restore(originator, memento) {
 
-        for (const prop of this.properties) {
+        for (const prop of this.config.primitives) {
             const value = clone(utils.getProperty(memento, prop));
             utils.setProperty(originator, prop, value);
         }
 
-        for (const ref of this.refs) {
+        for (const ref of this.config.refs) {
             utils.setProperty(originator, ref, memento[ref]);
         }
 
-        for (const key of Object.keys(this.custom)) {
-            const descriptor = this.custom[key];
+        for (const key of Object.keys(this.config.custom)) {
+            const descriptor = this.config.custom[key];
             const value = utils.getProperty(memento, key);
             descriptor.restore(originator, value);
         }
 
-        for(const prop of Object.keys(this.children)) {
-            const nestedCreator = this.children[prop];
+        for(const prop of Object.keys(this.config.nested)) {
+            const nestedCreator = this.config.nested[prop];
             const nestedObj = utils.getProperty(originator, prop);
             const nestedMemento = utils.getProperty(memento, prop);
             nestedCreator.restore(nestedObj, nestedMemento);

@@ -64,11 +64,36 @@ export default class MementoCreator {
             utils.setProperty(data, key, value);
         }
 
+        // nested creators
         for(const prop of Object.keys(this.config.nested)) {
             const nestedCreator = this.config.nested[prop];
             const nestedObj = utils.getProperty(originator, prop);
             const memento = nestedCreator.create(nestedObj);
             utils.setProperty(data, prop, memento);
+        }
+
+        // array handling
+        for(const prop of Object.keys(this.config.arrays)) {
+            const inArrayElemMementoCreator = this.config.arrays[prop];
+            // value is always a new array
+            const value = [];
+            const memorable = utils.getProperty(originator, prop, []);
+
+            for(const elem of memorable) {
+                // if creator is specified, then create memento for each element of an array
+                if (inArrayElemMementoCreator) {
+                    value.push({
+                        ref: elem,
+                        memento: inArrayElemMementoCreator.create(elem),
+                    });
+                } else {
+                    value.push({
+                        ref: elem,
+                    });
+                }
+            }
+
+            utils.setProperty(data, prop, value);
         }
 
         return data;
@@ -97,6 +122,32 @@ export default class MementoCreator {
             const nestedMemento = utils.getProperty(memento, prop);
             nestedCreator.restore(nestedObj, nestedMemento);
             utils.setProperty(originator, prop, nestedObj);
+        }
+
+        // TODO: consider some optimization: right now every time memento is restored it needs to clear all array and then
+        // re-add elements
+        for(const prop of Object.keys(this.config.arrays)) {
+            const inArrayElemMementoCreator = this.config.arrays[prop];
+            // value is always a new array
+            const memorable = utils.getProperty(originator, prop, []);
+            const value = memorable;
+            // clear array (this will affect all references to the array)
+            memorable.length = 0;
+
+            const arrayMemento = utils.getProperty(memento, prop);
+
+            for(const arrayElemMemento of arrayMemento) {
+                const elemRef = arrayElemMemento.ref;
+
+                // if creator is specified, then restore memento for each element of an array
+                if (inArrayElemMementoCreator) {
+                    inArrayElemMementoCreator.restore(elemRef, arrayElemMemento.memento);
+                }
+
+                value.push(elemRef)
+            }
+
+            utils.setProperty(originator, prop, value);
         }
     }
 }

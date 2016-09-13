@@ -262,5 +262,38 @@ describe('Memento Creator', () => {
 
             expect(obj).to.eql(objCopy);
         });
+
+        it('should handle creating mementos for elements of an array and restoring them. ' +
+            'Array reference should be retained along with element references.', () => {
+            const obj = {};
+            const tweens = [
+                { progress: 0.4, inReverse: false },
+                { progress: 1, inReverse: true },
+            ];
+            obj.tweens = tweens;
+            const objCopy = clone(obj);
+
+            const tweenMementoCreator = new MementoCreator({
+                primitives: ['progress'],
+            });
+            const creator = new MementoCreator({
+                arrays: {
+                    tweens: tweenMementoCreator
+                }
+            });
+
+            const snap1 = creator.create(obj);
+            obj.tweens.pop();
+            obj.tweens[0].progress = 0.53;
+            const snap2 = creator.create(obj);
+            obj.tweens.pop();
+
+            creator.restore(obj, snap2);
+            creator.restore(obj, snap1);
+
+            expect(obj).to.eql(objCopy);
+            expect(obj.tweens[0]).to.equal(tweens[0]);
+            expect(obj.tweens[1]).to.equal(tweens[1]);
+        });
     });
 });

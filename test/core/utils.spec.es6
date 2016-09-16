@@ -22,7 +22,7 @@
  SOFTWARE.
  */
 import { expect } from 'chai';
-import utils from '../src/js/modules/utils.es6';
+import utils from '../../src/core/utils.es6';
 
 
 describe('Utils', () => {

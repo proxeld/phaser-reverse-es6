@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import clone from 'clone';
-import MementoCreator from '../src/js/modules/memento-creator.es6';
+import MementoCreator from '../../src/core/memento-creator.es6';
 
 
 describe('Memento Creator', () => {

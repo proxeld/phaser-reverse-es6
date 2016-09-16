@@ -58,9 +58,9 @@ gulp.task('watch', function () {
     var watcherBundler = browserify({
         debug: true,
         extensions: ['es6'],
-        entries: ['src/js/app.es6'],
+        entries: ['src/app.es6'],
         // single global variable for the library
-        standalone: 'LibraryName',
+        standalone: 'PhaserReverse',
         cache: {},
         packageCache: {},
         plugin: [watchify]
@@ -80,7 +80,7 @@ gulp.task('js', function () {
     bundle(browserify({
         debug: true,
         extensions: ['es6'],
-        entries: ['src/js/app.es6'],
+        entries: ['src/app.es6'],
         // single global variable for the library
         // this will be available in the browser if bundle will be loaded using html script tag
         standalone: 'LibraryName'

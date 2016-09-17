@@ -23,6 +23,6 @@
  */
 import log from 'loglevel';
 
-log.setDefaultLevel(log.levels.DEBUG);
+log.setDefaultLevel(log.levels.TRACE);
 
 export default log;

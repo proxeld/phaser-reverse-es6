@@ -5,6 +5,10 @@
   },
   "rules": {
     "indent": ["error", 4],
+    "no-prototype-builtins": 0,
+    "no-underscore-dangle": ["off", {"allowAfterThis": true}],
+    "max-len": ["error", 128],
+    "no-plusplus": ["off"],
     "import/no-extraneous-dependencies": ["error", {"devDependencies": true}]
   }
 }

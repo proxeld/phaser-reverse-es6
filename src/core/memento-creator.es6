@@ -32,11 +32,21 @@ const configDefault = {
     nested: {},
     custom: {},
     arrays: {},
+    // for changing name of the property in the memento (to prevent clashing)
+    aliases: {},
 };
 
 export default class MementoCreator {
     constructor(config) {
         this.config = Object.assign({}, configDefault, config);
+    }
+
+    _aliasify(conf, prop) {
+        if (this.config.aliases[conf] && this.config.aliases[conf][prop]) {
+            return this.config.aliases[conf][prop];
+        }
+
+        return prop;
     }
 
     create(originator) {
@@ -47,39 +57,43 @@ export default class MementoCreator {
         for (const prop of this.config.primitives) {
             // property cannot be circular object
             const value = clone(utils.getProperty(originator, prop), false);
-            utils.setProperty(data, prop, value);
+            const alias = this._aliasify('primitives', prop);
+            utils.setProperty(data, alias, value);
         }
 
         // copy references, not their values
         // this can prevent garbage collection
         for (const ref of this.config.refs) {
             const value = utils.getProperty(originator, ref);
-            utils.setProperty(data, ref, value);
+            const alias = this._aliasify('refs', ref);
+            utils.setProperty(data, alias, value);
         }
 
         // custom behaviour for properties that need such
         for (const key of Object.keys(this.config.custom)) {
             const descriptor = this.config.custom[key];
             const value = descriptor.create(originator);
-            utils.setProperty(data, key, value);
+            const alias = this._aliasify('custom', key);
+            utils.setProperty(data, alias, value);
         }
 
         // nested creators
-        for(const prop of Object.keys(this.config.nested)) {
+        for (const prop of Object.keys(this.config.nested)) {
             const nestedCreator = this.config.nested[prop];
             const nestedObj = utils.getProperty(originator, prop);
             const memento = nestedCreator.create(nestedObj);
-            utils.setProperty(data, prop, memento);
+            const alias = this._aliasify('nested', prop);
+            utils.setProperty(data, alias, memento);
         }
 
         // array handling
-        for(const prop of Object.keys(this.config.arrays)) {
+        for (const prop of Object.keys(this.config.arrays)) {
             const inArrayElemMementoCreator = this.config.arrays[prop];
             // value is always a new array
             const value = [];
             const memorable = utils.getProperty(originator, prop, []);
 
-            for(const elem of memorable) {
+            for (const elem of memorable) {
                 // if creator is specified, then create memento for each element of an array
                 if (inArrayElemMementoCreator) {
                     value.push({
@@ -93,40 +107,44 @@ export default class MementoCreator {
                 }
             }
 
-            utils.setProperty(data, prop, value);
+            const alias = this._aliasify('arrays', prop);
+            utils.setProperty(data, alias, value);
         }
 
         return data;
     }
 
     restore(originator, memento) {
-
         for (const prop of this.config.primitives) {
-            const value = clone(utils.getProperty(memento, prop));
+            const alias = this._aliasify('primitives', prop);
+            const value = clone(utils.getProperty(memento, alias));
             utils.setProperty(originator, prop, value);
         }
 
         for (const ref of this.config.refs) {
-            utils.setProperty(originator, ref, memento[ref]);
+            const alias = this._aliasify('refs', ref);
+            utils.setProperty(originator, ref, memento[alias]);
         }
 
         for (const key of Object.keys(this.config.custom)) {
             const descriptor = this.config.custom[key];
-            const value = utils.getProperty(memento, key);
+            const alias = this._aliasify('custom', key);
+            const value = utils.getProperty(memento, alias);
             descriptor.restore(originator, value);
         }
 
-        for(const prop of Object.keys(this.config.nested)) {
+        for (const prop of Object.keys(this.config.nested)) {
             const nestedCreator = this.config.nested[prop];
             const nestedObj = utils.getProperty(originator, prop);
-            const nestedMemento = utils.getProperty(memento, prop);
+            const alias = this._aliasify('nested', prop);
+            const nestedMemento = utils.getProperty(memento, alias);
             nestedCreator.restore(nestedObj, nestedMemento);
-            utils.setProperty(originator, prop, nestedObj);
+            // TODO: check if it's necessary: utils.setProperty(originator, prop, nestedObj);
         }
 
         // TODO: consider some optimization: right now every time memento is restored it needs to clear all array and then
         // re-add elements
-        for(const prop of Object.keys(this.config.arrays)) {
+        for (const prop of Object.keys(this.config.arrays)) {
             const inArrayElemMementoCreator = this.config.arrays[prop];
             // value is always a new array
             const memorable = utils.getProperty(originator, prop, []);
@@ -134,9 +152,10 @@ export default class MementoCreator {
             // clear array (this will affect all references to the array)
             memorable.length = 0;
 
-            const arrayMemento = utils.getProperty(memento, prop);
+            const alias = this._aliasify('arrays', prop);
+            const arrayMemento = utils.getProperty(memento, alias);
 
-            for(const arrayElemMemento of arrayMemento) {
+            for (const arrayElemMemento of arrayMemento) {
                 const elemRef = arrayElemMemento.ref;
 
                 // if creator is specified, then restore memento for each element of an array
@@ -144,7 +163,7 @@ export default class MementoCreator {
                     inArrayElemMementoCreator.restore(elemRef, arrayElemMemento.memento);
                 }
 
-                value.push(elemRef)
+                value.push(elemRef);
             }
 
             utils.setProperty(originator, prop, value);

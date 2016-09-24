@@ -27,91 +27,93 @@ const creators = {
     ANIMATION: new MementoCreator({
         custom: {
             frame: {
-                create: function (orignator) {
-                    return orignator.frame;
+                create: (originator) => (originator ? originator.frame : {}),
+                restore: (originator, memento) => {
+                    originator.frame = originator._frames.indexOf(memento);
                 },
-                restore: function (memento) {
-                    memento.originator.frame = memento.originator._frames.indexOf(memento.data.frameCustom);
-                }
-            }
-        }
+            },
+        },
     }),
     BODY_ARCADE: new MementoCreator({
-        primitives: ['velocity.x', 'velocity.y', 'enable']
+        primitives: ['velocity.x', 'velocity.y', 'enable'],
     }),
     BODY_P2: new MementoCreator({
         primitives: ['velocity.x', 'velocity.y', 'data.position.0', 'data.position.1', 'angularForce',
-            'angularVelocity', 'damping', 'x', 'y', 'rotation']
+            'angularVelocity', 'damping', 'x', 'y', 'rotation'],
     }),
     TWEEN_MANAGER: new MementoCreator({
         custom: {
             tweens: {
-                create: function (originator) {
-                    var tweens = [];
+                create: (originator) => {
+                    const tweens = [];
 
                     // save information about tweens that are currently active
-                    for (var i = 0; i < originator._tweens.length; ++i)
-                        tweens.push(originator._tweens[i])
+                    for (const tween of originator._tweens) {
+                        tweens.push(tween);
+                    }
 
                     return tweens;
                 },
-                restore: function (memento) {
+                restore: (memento) => {
                     memento.originator._tweens = memento.data.tweensCustom;
-                }
-            }
-        }
+                },
+            },
+        },
     }),
     TWEEN_DATA: new MementoCreator({
-        primitives: ['dt', 'inReverse', 'isRunning', 'percent', 'value', 'repeatCounter', 'vStart', 'vEnd']
+        primitives: ['dt', 'inReverse', 'isRunning', 'percent', 'value', 'repeatCounter', 'vStart', 'vEnd'],
     }),
     TWEEN: new MementoCreator({
         primitives: ['pendingDelete', 'isRunning', 'isPaused', 'current'],
         custom: {
             tweenData: {
-                create: function (originator) {
-                    return originator.timeline[originator.current].createMemento()
+                create: originator => creators.TWEEN_DATA.create(originator.timeline[originator.current]),
+                restore: (originator, memento) => {
+                    creators.TWEEN_DATA.restore(originator, memento);
+                    // memento.originator.timeline[memento.data.currentProp].restore(memento.data.tweenDataCustom);
                 },
-                restore: function (memento) {
-                    memento.originator.timeline[memento.data.currentProp].restoreMemento(memento.data['tweenDataCustom']);
-                }
-            }
-        }
+            },
+        },
     }),
     CAMERA: new MementoCreator({
-        primitives: ['view.x', 'view.y']
+        primitives: ['view.x', 'view.y'],
     }),
     WORLD: new MementoCreator({
-        primitives: ['x', 'y']
+        primitives: ['x', 'y'],
     }),
     GROUP: new MementoCreator({
-        primitives: ['x', 'y', 'exists', 'alive', 'alpha', 'angle']
+        primitives: ['x', 'y', 'exists', 'alive', 'alpha', 'angle'],
     }),
     TEXT: new MementoCreator({
-        primitives: ['text']
+        primitives: ['text'],
     }),
 };
 
-creators['SPRITE_ARCADE'] = new MementoCreator({
+creators.ANIMATION_MANAGER = new MementoCreator({
+    refs: ['currentAnim'],
+    nested: {
+        currentAnim: creators.ANIMATION,
+    },
+    aliases: {
+        refs: {
+            currentAnim: 'currentAnimRef',
+        },
+    },
+});
+
+creators.SPRITE_ARCADE = new MementoCreator({
     primitives: ['position.x', 'position.y', 'alive', 'exists', 'visible', 'scale.x', 'scale.y', 'angle'],
     nested: {
         body: creators.BODY_ARCADE,
-        animations: creators.ANIMATION
-    }
+        animations: creators.ANIMATION_MANAGER,
+    },
 });
 
-creators['SPRITE_P2'] = new MementoCreator({
+creators.SPRITE_P2 = new MementoCreator({
     primitives: ['position.x', 'position.y', 'alive', 'exists', 'visible', 'scale.x', 'scale.y', 'angle'],
     nested: {
         body: creators.BODY_P2,
-        animations: creators.ANIMATION
-    }
-});
-
-creators['ANIMATION_MANAGER'] = new MementoCreator({
-    // TODO: find a way to pass the same property as ref and nested
-    refs: ['currentAnim'],
-    nested: {
-        currentAnim: creators.ANIMATION
+        animations: creators.ANIMATION_MANAGER,
     },
 });
 

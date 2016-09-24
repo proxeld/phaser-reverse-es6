@@ -21,12 +21,11 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-import MementoCreator from "./memento-creator.es6";
+import MementoCreator from './memento-creator.es6';
 import log from '../utils/logger.es6';
 
 export default class StateManipulator {
     constructor() {
-
         // Main data structure of state manipulator
         // Contains all recorded snapshots of the game state (consisting of mementos of various objects)
         // Single element has the following structure:
@@ -54,27 +53,50 @@ export default class StateManipulator {
     }
 
     /**
-     * Clears state stack (discards all remembered snapshots)
+     * Begins new state pushing new object on the state stack and
+     * remembering timestamp of state (a.k.a time of beginning of it's creation)
+     * NOTE: This method is used internally. You should never use it by yourself.
+     * @return {object} newly created state
+     */
+    _initNewSnapshot() {
+        this._snapshots[++this._currentStateIndex] = {
+            // TODO: check old method: timeManager.timeElapsed(),
+            // TODO: check if game.time.time isn't more appropriate in here
+            timestamp: new Date().getTime(),
+            mementos: [],
+        };
+
+        return this.getLastSnapshot();
+    }
+
+    /**
+     * Clears snapshot stack (discards all remembered snapshots)
      */
     discardAllSnapshots() {
         this._snapshots = [];
-        this._currentStateIdx = -1;
+        this._currentStateIndex = -1;
+    }
+
+    /**
+     * Discard all taken snapshots that represent the future.
+     * It means that we restored snapshot from the past and we do not want to
+     * be able to store all snapshots taken after the snapshot we reverted to
+     */
+    discardFutureSnapshots() {
+        this._snapshots.splice(this._currentStateIndex + 1);
     }
 
     registerMemorable(memorable, creator) {
-
         // check if creator was specified explicitly
         if (creator instanceof MementoCreator) {
             this._memorables.set(memorable, creator);
 
             // cache creator for latter usage with the same class of memorable object
             this._creators.set(memorable.constructor, creator);
-        }
-        // if not, try to find creator associated with memorable class
-        else if(creator === undefined) {
+        } else if (creator === undefined) {  // if not, try to find creator associated with memorable class
             let found = false;
 
-            for(const [constructor, cachedCreator] of this._creators.entries()) {
+            for (const [constructor, cachedCreator] of this._creators.entries()) {
                 // check cache of creators - search for creator that matches memorable class
                 if (memorable instanceof constructor) {
                     this._memorables.set(memorable, cachedCreator);
@@ -83,12 +105,10 @@ export default class StateManipulator {
                 }
             }
 
-            if(!found) {
+            if (!found) {
                 throw new Error('Creator not specified and not found in cache. Please specify a creator explicitly.');
             }
-        }
-        // not valid creator and not undefined
-        else {
+        } else { // not valid creator and not undefined
             throw new Error('Specified creator is not instance of MementoCreator class. Creator:', creator);
         }
     }
@@ -99,7 +119,6 @@ export default class StateManipulator {
      * @return {object} snapshot of all memorables
      */
     takeSnapshot() {
-
         // initialize new snapshot
         const snapshot = this._initNewSnapshot();
 
@@ -118,7 +137,7 @@ export default class StateManipulator {
         }
 
         return snapshot;
-    };
+    }
 
     restoreSnapshot(snapshot) {
         // create mementos for all memorables
@@ -126,7 +145,7 @@ export default class StateManipulator {
         //       This can lead to memory leaks.
         for (const memento of snapshot.mementos) {
             const creator = this._memorables.get(memento.memorable);
-            creator.restore(memento.memorable, memento.data)
+            creator.restore(memento.memorable, memento.data);
         }
     }
 
@@ -135,7 +154,7 @@ export default class StateManipulator {
      * @param {number} step can be positive (going forward) or negative (going backward)
      */
     shift(step = -1) {
-        if (this._snapshots.length == 0) {
+        if (this._snapshots.length === 0) {
             log.trace('No snapshots taken! State will not be change.');
             return undefined;
         }
@@ -180,7 +199,7 @@ export default class StateManipulator {
 
         // timeStoppedDispatched = false;
 
-        for(const snapshot of statesPath) {
+        for (const snapshot of statesPath) {
             targetSnapshot = this.restoreSnapshot(snapshot);
             // TODO: recalibrate timer
             // timeManager.setTime(targetState.timestamp);
@@ -190,7 +209,7 @@ export default class StateManipulator {
         this._currentStateIndex = targetStateIndex;
 
         return targetSnapshot;
-    };
+    }
 
     /**
      * Returns last state from the state stack. That is the last snapshot that was taken by takeSnapshot method
@@ -231,20 +250,4 @@ export default class StateManipulator {
         return this._currentStateIndex;
     }
 
-    /**
-     * Begins new state pushing new object on the state stack and
-     * remembering timestamp of state (a.k.a time of beginning of it's creation)
-     * NOTE: This method is used internally. You should never use it by yourself.
-     * @return {object} newly created state
-     */
-    _initNewSnapshot() {
-        this._snapshots[++this._currentStateIndex] = {
-            // TODO: check old method: timeManager.timeElapsed(),
-            // TODO: check if game.time.time isn't more appropriate in here
-            timestamp: new Date().getTime(),
-            mementos: []
-        };
-
-        return this.getLastSnapshot();
-    };
-};
+}

@@ -120,7 +120,15 @@ describe('Memento Creator', () => {
             };
 
             const subCreator = new MementoCreator({
-                primitives: ['x', 'y'],
+                primitives: ['x'],
+                custom: {
+                    y: {
+                        create: (originator) => {
+                            expect(originator).to.equal(obj.position);
+                            return originator.y;
+                        },
+                    },
+                },
             });
 
             const creator = new MementoCreator({
@@ -136,11 +144,47 @@ describe('Memento Creator', () => {
                 alpha: 0.14,
                 position: {
                     x: 10,
-                    y: 20
-                }
+                    y: 20,
+                },
             };
 
             expect(memento).to.eql(expectedResult);
+        });
+
+        it('should support defining aliases for properties', () => {
+            const creator = new MementoCreator({
+                primitives: ['x'],
+                refs: ['x'],
+                custom: {
+                    x: {
+                        create: originator => originator.x,
+                        restore: (originator, memento) => (originator.x = memento.x),
+                    },
+                },
+                aliases: {
+                    primitives: {
+                        x: 'primX',
+                    },
+                    refs: {
+                        x: 'refX',
+                    },
+                    custom: {
+                        x: 'customX',
+                    },
+                },
+            });
+
+            const memorable = {
+                x: 100,
+            };
+
+            const memento = creator.create(memorable);
+
+            expect(memento).to.eql({
+                primX: 100,
+                refX: 100,
+                customX: 100,
+            });
         });
     });
 
@@ -263,6 +307,53 @@ describe('Memento Creator', () => {
             expect(obj).to.eql(objCopy);
         });
 
+        it('should retain nested references', () => {
+            const inner = {
+                z: 10,
+            };
+
+            const position = {
+                x: 10,
+                y: 29,
+                inner,
+            };
+
+            const obj = {
+                alpha: 0.41,
+                visible: true,
+                position,
+            };
+
+            const objCopy = clone(obj);
+
+            const subCreator = new MementoCreator({
+                primitives: ['x', 'y'],
+                nested: {
+                    inner: new MementoCreator({ primitives: ['z'] }),
+                },
+            });
+
+            const creator = new MementoCreator({
+                primitives: ['alpha'],
+                nested: {
+                    position: subCreator,
+                },
+            });
+
+            const memento = creator.create(obj);
+
+            obj.position.x = 0;
+            obj.position.y = 0;
+            obj.position.inner.z = 52;
+            obj.alpha = 0;
+
+            creator.restore(obj, memento);
+
+            expect(obj).to.eql(objCopy);
+            expect(obj.position).to.equal(position);
+            expect(obj.position.inner).to.equal(inner);
+        });
+
         it('should handle creating mementos for elements of an array and restoring them. ' +
             'Array reference should be retained along with element references.', () => {
             const obj = {};
@@ -278,8 +369,8 @@ describe('Memento Creator', () => {
             });
             const creator = new MementoCreator({
                 arrays: {
-                    tweens: tweenMementoCreator
-                }
+                    tweens: tweenMementoCreator,
+                },
             });
 
             const snap1 = creator.create(obj);
@@ -294,6 +385,46 @@ describe('Memento Creator', () => {
             expect(obj).to.eql(objCopy);
             expect(obj.tweens[0]).to.equal(tweens[0]);
             expect(obj.tweens[1]).to.equal(tweens[1]);
+        });
+
+        it('should support defining aliases for properties', () => {
+            const creator = new MementoCreator({
+                primitives: ['x'],
+                refs: ['x'],
+                custom: {
+                    x: {
+                        create: originator => originator.x,
+                        restore: (originator, memento) => (originator.x = memento),
+                    },
+                },
+                aliases: {
+                    primitives: {
+                        x: 'primX',
+                    },
+                    refs: {
+                        x: 'refX',
+                    },
+                    custom: {
+                        x: 'customX',
+                    },
+                },
+            });
+
+            const memorable = {
+                x: 100,
+            };
+
+            const memento = creator.create(memorable);
+
+            expect(memento).to.eql({
+                primX: 100,
+                refX: 100,
+                customX: 100,
+            });
+
+            creator.restore(memorable, memento);
+
+            expect(memorable).to.eql({ x: 100 });
         });
     });
 });

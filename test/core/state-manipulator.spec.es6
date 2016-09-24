@@ -113,10 +113,10 @@ describe('State Manipulator', () => {
         beforeEach(() => {
             stateManipulator = new StateManipulator();
             dummyMemorable = {
-                x: 10
+                x: 10,
             };
             dummyCreator = new MementoCreator({
-                primitives: ['x']
+                primitives: ['x'],
             });
             stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
             snapshot1 = stateManipulator.takeSnapshot();

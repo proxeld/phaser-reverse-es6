@@ -21,7 +21,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-import {expect} from 'chai';
+import { expect } from 'chai';
 import StateManipulator from '../../src/core/state-manipulator.es6';
 import MementoCreator from '../../src/core/memento-creator.es6';
 
@@ -46,8 +46,8 @@ describe('State Manipulator', () => {
         });
 
         it('should be able to cache creators for the same type of memorables (of the same class)', () => {
-            let sizeBeforeMemorables = stateManipulator._memorables.size;
-            let sizeBeforeCreators = stateManipulator._creators.size;
+            const sizeBeforeMemorables = stateManipulator._memorables.size;
+            const sizeBeforeCreators = stateManipulator._creators.size;
             stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
             stateManipulator.registerMemorable(dummyMemorable2);
             expect(stateManipulator._memorables.size).to.eql(sizeBeforeMemorables + 2);
@@ -69,10 +69,10 @@ describe('State Manipulator', () => {
         beforeEach(() => {
             stateManipulator = new StateManipulator();
             dummyMemorable = {
-                x: 10
+                x: 10,
             };
             dummyCreator = new MementoCreator({
-                primitives: ['x']
+                primitives: ['x'],
             });
             stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
         });
@@ -106,9 +106,6 @@ describe('State Manipulator', () => {
         let stateManipulator;
         let dummyMemorable;
         let dummyCreator;
-        let snapshot1;
-        let snapshot2;
-        let snapshot3;
 
         beforeEach(() => {
             stateManipulator = new StateManipulator();
@@ -119,11 +116,11 @@ describe('State Manipulator', () => {
                 primitives: ['x'],
             });
             stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
-            snapshot1 = stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
             dummyMemorable.x = 0;
-            snapshot2 = stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
             dummyMemorable.x = 5;
-            snapshot3 = stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
             dummyMemorable.x = 3;
             stateManipulator.takeSnapshot();
         });

@@ -9,7 +9,7 @@
     "test-watch": "mocha --compilers es6:babel-register --require babel-polyfill --recursive --watch test",
     "watch": "gulp watch",
     "build": "gulp js",
-    "build-browser-tests-bundle": "browserify test/*.es6 -o build/tests-bundle.js",
+    "build-browser-tests-bundle": "browserify test/**/*.es6 -o build/tests-bundle.js",
     "cover": "istanbul cover _mocha -- --compilers es6:babel-register --recursive test",
     "eslint": "eslint --ext .es6 --ext .js src/** test/**; exit 0",
     "clean": "rm -r coverage && rm -r build"
@@ -45,7 +45,6 @@
     "gulp-uglify": "~2.0.0",
     "gulp-util": "~3.0.7",
     "istanbul": "^1.1.0-alpha.1",
-    "loglevel": "^1.4.1",
     "mocha": "~3.0.2",
     "phantomjs": "~2.1.7",
     "vinyl-buffer": "~1.0.0",
@@ -53,6 +52,7 @@
     "watchify": "~3.7.0"
   },
   "dependencies": {
-    "clone": "^1.0.2"
+    "clone": "^1.0.2",
+    "loglevel": "^1.4.1"
   }
 }

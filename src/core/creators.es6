@@ -43,6 +43,7 @@ const creators = {
     }),
     TWEEN_MANAGER: new MementoCreator({
         custom: {
+            // TODO: change this from custom to arrays
             tweens: {
                 create: (originator) => {
                     const tweens = [];
@@ -54,8 +55,8 @@ const creators = {
 
                     return tweens;
                 },
-                restore: (memento) => {
-                    memento.originator._tweens = memento.data.tweensCustom;
+                restore: (originator, memento) => {
+                    originator._tweens = memento;
                 },
             },
         },

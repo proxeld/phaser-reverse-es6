@@ -27,7 +27,6 @@ import utils from '../../src/core/utils.es6';
 
 describe('Utils', () => {
     describe('#getProperty()', () => {
-
         it('should default to undefined if property not defined', () => {
             let prop = utils.getProperty({ x: 10, y: 20 });
             expect(prop).to.eql(undefined);
@@ -77,9 +76,8 @@ describe('Utils', () => {
     });
 
     describe('#setProperty()', () => {
-
         it('value should default to {}', () => {
-            const obj = {x: 10};
+            const obj = { x: 10 };
             const objCopy = Object.assign({}, obj);
             utils.setProperty(obj);
             expect(obj).to.eql(objCopy);

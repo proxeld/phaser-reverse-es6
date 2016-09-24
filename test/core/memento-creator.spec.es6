@@ -8,7 +8,7 @@ describe('Memento Creator', () => {
     let obj;
     let objCopy;
 
-    before(() => {
+    beforeEach(() => {
         obj = {
             position: {
                 x: 10,
@@ -111,7 +111,7 @@ describe('Memento Creator', () => {
         });
 
         it('should support creating specified property with another memento creator', () => {
-            const obj = {
+            obj = {
                 position: {
                     x: 10,
                     y: 20,
@@ -131,7 +131,7 @@ describe('Memento Creator', () => {
                 },
             });
 
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 primitives: ['alpha'],
                 nested: {
                     position: subCreator,
@@ -152,7 +152,7 @@ describe('Memento Creator', () => {
         });
 
         it('should support defining aliases for properties', () => {
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 primitives: ['x'],
                 refs: ['x'],
                 custom: {
@@ -289,7 +289,7 @@ describe('Memento Creator', () => {
                 primitives: ['x', 'y'],
             });
 
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 primitives: ['alpha'],
                 nested: {
                     position: subCreator,
@@ -318,13 +318,13 @@ describe('Memento Creator', () => {
                 inner,
             };
 
-            const obj = {
+            obj = {
                 alpha: 0.41,
                 visible: true,
                 position,
             };
 
-            const objCopy = clone(obj);
+            objCopy = clone(obj);
 
             const subCreator = new MementoCreator({
                 primitives: ['x', 'y'],
@@ -333,7 +333,7 @@ describe('Memento Creator', () => {
                 },
             });
 
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 primitives: ['alpha'],
                 nested: {
                     position: subCreator,
@@ -356,18 +356,18 @@ describe('Memento Creator', () => {
 
         it('should handle creating mementos for elements of an array and restoring them. ' +
             'Array reference should be retained along with element references.', () => {
-            const obj = {};
+            obj = {};
             const tweens = [
                 { progress: 0.4, inReverse: false },
                 { progress: 1, inReverse: true },
             ];
             obj.tweens = tweens;
-            const objCopy = clone(obj);
+            objCopy = clone(obj);
 
             const tweenMementoCreator = new MementoCreator({
                 primitives: ['progress'],
             });
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 arrays: {
                     tweens: tweenMementoCreator,
                 },
@@ -388,7 +388,7 @@ describe('Memento Creator', () => {
         });
 
         it('should support defining aliases for properties', () => {
-            const creator = new MementoCreator({
+            creator = new MementoCreator({
                 primitives: ['x'],
                 refs: ['x'],
                 custom: {

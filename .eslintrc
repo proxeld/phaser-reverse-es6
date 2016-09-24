@@ -9,6 +9,7 @@
     "no-prototype-builtins": 0,
     "no-underscore-dangle": ["off", {"allowAfterThis": true}],
     "max-len": ["error", 128],
+    "no-param-reassign": ["error", { "props": false }],
     "no-plusplus": ["off"]
   }
 }

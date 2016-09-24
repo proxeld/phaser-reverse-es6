@@ -86,6 +86,15 @@ export default class StateManipulator {
         this._snapshots.splice(this._currentStateIndex + 1);
     }
 
+    /**
+     * By registering object it becomes subject of memento creation through #takeSnapshot() method
+     * @param memorable any JavaScript object
+     * @param creator creator which will create memento of memorable specified as first argument. This param is not
+     * always mandatory. If undefined, StateManipulator will try to find creator which matches
+     * memorable's construction function (class). This is done by caching creators for previously registered objects.
+     * @throws Error if creator was not specified and cannot be found in cache
+     * @see PhaserReverse.Creators for predefined creators for Phaser built-in objects
+     */
     registerMemorable(memorable, creator) {
         // check if creator was specified explicitly
         if (creator instanceof MementoCreator) {
@@ -139,9 +148,14 @@ export default class StateManipulator {
         return snapshot;
     }
 
+    /**
+     * Restores state from snapshot taken by #takeSnapshot() method
+     * @param snapshot snapshot created by #takeSnapshotMethod
+     * @see takeSnapshot
+     */
     restoreSnapshot(snapshot) {
-        // create mementos for all memorables
-        // NOTE: All the _memorables are still in the memory even if library user destroyed them in the game.
+        // restore mementos of all memorables
+        // NOTE: All the _memorables are still in the memory even if user of this library destroyed them in the game.
         //       This can lead to memory leaks.
         for (const memento of snapshot.mementos) {
             const creator = this._memorables.get(memento.memorable);

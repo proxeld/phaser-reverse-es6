@@ -58,7 +58,7 @@ var create = function () {
 
     this.stateManipulator = new PhaserReverse.StateManipulator();
     // this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE_ARCADE);
-    this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE_ARCADE);
+    this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE_P2);
     this.stateManipulator.registerMemorable(this.fadeOutTween, PhaserReverse.Creators.TWEEN);
 
     window.mainState = this;

@@ -28,7 +28,7 @@ export default {
         let final = obj;
 
         for (const part of props) {
-            if (final.hasOwnProperty(part)) {
+            if (typeof final === 'object' && part in final) {
                 final = final[part];
             } else {
                 return fallbackValue;

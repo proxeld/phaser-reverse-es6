@@ -5,7 +5,7 @@
     "node": true
   },
   "rules": {
-    "indent": ["error", 4],
+    "indent": ["error", 4, { "SwitchCase": 1 }],
     "no-prototype-builtins": 0,
     "no-underscore-dangle": ["off", {"allowAfterThis": true}],
     "max-len": ["error", 128],

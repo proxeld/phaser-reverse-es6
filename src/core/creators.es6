@@ -37,7 +37,7 @@ const creators = {
     BODY_ARCADE: new MementoCreator({
         primitives: ['velocity.x', 'velocity.y', 'enable'],
     }),
-    BODY_P2: new MementoCreator({
+    BODY_P2JS: new MementoCreator({
         primitives: ['velocity.x', 'velocity.y', 'data.position.0', 'data.position.1', 'angularForce',
             'angularVelocity', 'damping', 'x', 'y', 'rotation'],
     }),
@@ -102,19 +102,36 @@ creators.ANIMATION_MANAGER = new MementoCreator({
     },
 });
 
-creators.SPRITE_ARCADE = new MementoCreator({
+creators.SPRITE = new MementoCreator({
     primitives: ['position.x', 'position.y', 'alive', 'exists', 'visible', 'scale.x', 'scale.y', 'angle'],
     nested: {
-        body: creators.BODY_ARCADE,
         animations: creators.ANIMATION_MANAGER,
     },
-});
-
-creators.SPRITE_P2 = new MementoCreator({
-    primitives: ['position.x', 'position.y', 'alive', 'exists', 'visible', 'scale.x', 'scale.y', 'angle'],
-    nested: {
-        body: creators.BODY_P2,
-        animations: creators.ANIMATION_MANAGER,
+    custom: {
+        body: {
+            create: (originator) => {
+                switch (originator.body.type) {
+                    case Phaser.Physics.ARCADE:
+                        return creators.BODY_ARCADE.create(originator.body);
+                    case Phaser.Physics.P2JS:
+                        return creators.BODY_P2JS.create(originator.body);
+                    default:
+                        throw Error(`Unknown body type: ${originator.body.type}`);
+                }
+            },
+            restore: (originator, memento) => {
+                switch (originator.body.type) {
+                    case Phaser.Physics.ARCADE:
+                        creators.BODY_ARCADE.restore(originator.body, memento);
+                        break;
+                    case Phaser.Physics.P2JS:
+                        creators.BODY_P2JS.restore(originator.body, memento);
+                        break;
+                    default:
+                        throw Error(`Unknown body type: ${originator.body.type}`);
+                }
+            },
+        },
     },
 });
 

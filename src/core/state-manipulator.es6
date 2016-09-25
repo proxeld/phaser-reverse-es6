@@ -157,10 +157,19 @@ export default class StateManipulator {
         // restore mementos of all memorables
         // NOTE: All the _memorables are still in the memory even if user of this library destroyed them in the game.
         //       This can lead to memory leaks.
+        const snapshotNumber = this._snapshots.indexOf(snapshot);
+
+        if (snapshotNumber === -1) {
+            throw new Error('Snapshot not found in snapshots array. Is it a valid snapshot?');
+        }
+
         for (const memento of snapshot.mementos) {
             const creator = this._memorables.get(memento.memorable);
             creator.restore(memento.memorable, memento.data);
         }
+
+        // reassign current state index
+        this._currentStateIndex = snapshotNumber;
     }
 
     /**
@@ -213,6 +222,9 @@ export default class StateManipulator {
 
         // timeStoppedDispatched = false;
 
+
+        // restore all states sequentially
+        // this is necessary if mementos are minified
         for (const snapshot of statesPath) {
             targetSnapshot = this.restoreSnapshot(snapshot);
             // TODO: recalibrate timer

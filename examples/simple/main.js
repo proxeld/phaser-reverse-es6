@@ -34,7 +34,7 @@ var create = function () {
 
     this.fellow = game.add.sprite(game.world.centerX, game.world.centerY, 'fellow');
     this.fellow.scale.setTo(0.5);
-    this.tim = game.add.sprite(250, 290, 'tim');
+    this.tim = game.add.sprite(100, 150, 'tim');
     this.tim.animations.add('right', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]);
     this.tim.animations.add('left', [28, 29, 30]);
 
@@ -45,10 +45,9 @@ var create = function () {
     game.physics.startSystem(Phaser.Physics.P2JS);
     game.physics.p2.enable(this.fellow);
     game.physics.p2.enable(this.tim);
-    game.camera.follow(this.fellow);
+    game.camera.follow(this.tim);
 
-    this.pKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
-    this.rKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
+    this.sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
     this.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     this.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -57,11 +56,9 @@ var create = function () {
     this.shiftKey.onUp.add(function () {
         this.stateManipulator.discardFutureSnapshots();
     }, this);
-    this.pKey.onDown.add(function () {
-       game.paused = true;
-    });
-    this.rKey.onDown.add(function () {
-        game.paused = false;
+    this.sKey.onDown.add(function () {
+        game.paused = !game.paused;
+        stateManipulator.discardFutureSnapshots();
     });
 
     var stateManipulator = new PhaserReverse.StateManipulator();
@@ -70,6 +67,7 @@ var create = function () {
     this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.fadeOutTween, PhaserReverse.Creators.TWEEN);
 
+    document.getElementById('state-slider-wrapper').style.width = game.width + 'px';
     this.stateSlider = document.getElementById('state-slider');
     this.stateSlider.oninput = function (evt) {
         game.paused = true;
@@ -127,8 +125,8 @@ var preRender = function () {
 var render = function () {
     game.debug.text('FPS: ' + game.time.fps || '--', game.width - 64, game.height - 16, "#00ff00", '16px Verdana');
     game.debug.text('Suggested FPS: ' + game.time.suggestedFps || '--', game.width - 128, game.height - 32, "#00ff00", '16px Verdana');
-    game.debug.text('Current state: ' + this.stateManipulator.getSnapshotsAmount(), game.width - 250, 32, '#ffffff', '26px Verdana');
-    game.debug.text('Phaser Time: ' + game.time.totalElapsedSeconds().toFixed(2), 16, 32, '#ffffff', '26px Verdana');
+    game.debug.text('Current state: ' + this.stateManipulator.getSnapshotsAmount(), game.width - 250, 64, '#ffffff', '26px Verdana');
+    game.debug.text('Phaser Time: ' + game.time.totalElapsedSeconds().toFixed(2), 16, 64, '#ffffff', '26px Verdana');
     game.debug.text('World x: ' + game.world.x + ' y: ' + game.world.y, 20, 350, '#fff', '24px');
     game.debug.cameraInfo(game.camera, 20, 500);
     game.debug.spriteInfo(this.fellow, 20, 400);

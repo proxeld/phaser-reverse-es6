@@ -84,6 +84,18 @@ describe('State Manipulator', () => {
             expect(dummyMemorable.x).to.eql(10);
         });
 
+        it('should update current snapshot number', () => {
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            const snapshot = stateManipulator.takeSnapshot();
+            const snapshotNumber = stateManipulator.getCurrentSnapshotNumber();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.restoreSnapshot(snapshot);
+
+            expect(stateManipulator.getCurrentSnapshotNumber()).to.eql(snapshotNumber);
+        });
+
         it('should be able to restore snapshot from any point in time', () => {
             dummyMemorable.x = 10;
             const snapshot1 = stateManipulator.takeSnapshot();

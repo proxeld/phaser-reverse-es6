@@ -78,6 +78,12 @@ describe('Memento Creator', () => {
             expect(memento).to.eql({ alpha: 0.41 });
         });
 
+        it('should return empty object if memorable is undefined', () => {
+            creator = new MementoCreator({});
+            const memento = creator.create(undefined);
+            expect(memento).to.eql({});
+        });
+
         it('should be able to extract deep property', () => {
             creator = new MementoCreator({
                 primitives: ['position.x'],

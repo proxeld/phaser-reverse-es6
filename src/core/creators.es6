@@ -29,7 +29,9 @@ const creators = {
             frame: {
                 create: (originator) => (originator ? originator.frame : {}),
                 restore: (originator, memento) => {
-                    originator.frame = originator._frames.indexOf(memento);
+                    if (originator) {
+                        originator.frame = originator._frames.indexOf(memento);
+                    }
                 },
             },
         },

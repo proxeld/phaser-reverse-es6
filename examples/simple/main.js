@@ -47,6 +47,8 @@ var create = function () {
     game.physics.p2.enable(this.tim);
     game.camera.follow(this.fellow);
 
+    this.pKey = game.input.keyboard.addKey(Phaser.Keyboard.P);
+    this.rKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
     this.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     this.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -55,11 +57,25 @@ var create = function () {
     this.shiftKey.onUp.add(function () {
         this.stateManipulator.discardFutureSnapshots();
     }, this);
+    this.pKey.onDown.add(function () {
+       game.paused = true;
+    });
+    this.rKey.onDown.add(function () {
+        game.paused = false;
+    });
 
-    this.stateManipulator = new PhaserReverse.StateManipulator();
-    // this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE_ARCADE);
+    var stateManipulator = new PhaserReverse.StateManipulator();
+    this.stateManipulator = stateManipulator;
+    this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.fadeOutTween, PhaserReverse.Creators.TWEEN);
+
+    this.stateSlider = document.getElementById('state-slider');
+    this.stateSlider.oninput = function (evt) {
+        game.paused = true;
+        document.getElementById('state-slider-label').innerHTML = this.value;
+        stateManipulator.restoreSnapshot(stateManipulator._snapshots[this.value - 1]);
+    };
 
     window.mainState = this;
 };
@@ -95,6 +111,9 @@ var update = function () {
     }
 
     this.stateManipulator.takeSnapshot();
+    this.stateSlider.max = this.stateManipulator.getSnapshotsAmount();
+    this.stateSlider.value = this.stateManipulator.getSnapshotsAmount();
+    document.getElementById('state-slider-label').innerHTML = this.stateSlider.value;
 };
 
 var preRender = function () {
@@ -108,7 +127,7 @@ var preRender = function () {
 var render = function () {
     game.debug.text('FPS: ' + game.time.fps || '--', game.width - 64, game.height - 16, "#00ff00", '16px Verdana');
     game.debug.text('Suggested FPS: ' + game.time.suggestedFps || '--', game.width - 128, game.height - 32, "#00ff00", '16px Verdana');
-    game.debug.text('Current state: ' + this.stateManipulator.getCurrentSnapshotNumber(), game.width - 250, 32, '#ffffff', '26px Verdana');
+    game.debug.text('Current state: ' + this.stateManipulator.getSnapshotsAmount(), game.width - 250, 32, '#ffffff', '26px Verdana');
     game.debug.text('Phaser Time: ' + game.time.totalElapsedSeconds().toFixed(2), 16, 32, '#ffffff', '26px Verdana');
     game.debug.text('World x: ' + game.world.x + ' y: ' + game.world.y, 20, 350, '#fff', '24px');
     game.debug.cameraInfo(game.camera, 20, 500);

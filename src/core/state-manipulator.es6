@@ -170,6 +170,8 @@ export default class StateManipulator {
 
         // reassign current state index
         this._currentStateIndex = snapshotNumber;
+
+        return snapshot;
     }
 
     /**

@@ -72,7 +72,10 @@ const creators = {
             tweenData: {
                 create: originator => creators.TWEEN_DATA.create(originator.timeline[originator.current]),
                 restore: (originator, memento) => {
-                    creators.TWEEN_DATA.restore(originator, memento);
+                    // in current version we rely on the fact that primitives are restored ealier than
+                    // customs are. This will cause current property on the originator to be already restored.
+                    // For now it's fine, but we should not relay on internal implementation of creating memento...
+                    creators.TWEEN_DATA.restore(originator.timeline[originator.current], memento);
                     // memento.originator.timeline[memento.data.currentProp].restore(memento.data.tweenDataCustom);
                 },
             },
@@ -135,6 +138,10 @@ creators.SPRITE = new MementoCreator({
             },
         },
     },
+});
+
+creators.SPRITE_BARE = new MementoCreator({
+    primitives: ['position.x', 'position.y', 'alive', 'exists', 'visible', 'scale.x', 'scale.y', 'angle'],
 });
 
 export default creators;

@@ -21,6 +21,53 @@ describe('Memento Creator', () => {
         objCopy = clone(obj);
     });
 
+    describe('#constructor()', () => {
+        it('should validate initial config', () => {
+            expect(() => {
+                creator = new MementoCreator({
+                    primitives: {},
+                });
+            }).to.throw(Error);
+
+            expect(() => {
+                creator = new MementoCreator({
+                    refs: {},
+                });
+            }).to.throw(Error);
+
+            expect(() => {
+                creator = new MementoCreator({
+                    nested: [],
+                });
+            }).to.throw(Error);
+
+            expect(() => {
+                creator = new MementoCreator({
+                    custom: {
+                        create: () => {},
+                        restore: () => {},
+                    },
+                });
+            }).to.throw(Error);
+
+            expect(() => {
+                creator = new MementoCreator({
+                    custom: {
+                        position: {
+                            create: () => {},
+                        },
+                    },
+                });
+            }).to.throw(Error);
+
+            expect(() => {
+                creator = new MementoCreator({
+                    arrays: [],
+                });
+            }).to.throw(Error);
+        });
+    });
+
     describe('#create()', () => {
         it('should be able to extract shallow property', () => {
             creator = new MementoCreator({
@@ -85,6 +132,7 @@ describe('Memento Creator', () => {
                     position: {
                         create: (memorable) =>
                             `${memorable.position.x}, ${memorable.position.y}`,
+                        restore: () => {},
                     },
                 },
             });
@@ -100,6 +148,7 @@ describe('Memento Creator', () => {
                 custom: {
                     constant: {
                         create: () => 'Hello, World!',
+                        restore: () => {},
                     },
                 },
             });
@@ -127,6 +176,7 @@ describe('Memento Creator', () => {
                             expect(originator).to.equal(obj.position);
                             return originator.y;
                         },
+                        restore: () => {},
                     },
                 },
             });

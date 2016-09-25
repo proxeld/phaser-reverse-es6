@@ -39,6 +39,34 @@ const configDefault = {
 export default class MementoCreator {
     constructor(config) {
         this.config = Object.assign({}, configDefault, config);
+        MementoCreator._validateConfig(this.config);
+    }
+
+    static _validateConfig(config) {
+        const { primitives, refs, nested, custom, arrays } = config;
+
+        if (!Array.isArray(primitives)) {
+            throw new Error('primitives should be an array');
+        } else if (!Array.isArray(refs)) {
+            throw new Error('refs should be an array');
+        } else if (Array.isArray(nested) || typeof nested !== 'object') {
+            throw new Error('nested should be an object');
+        } else if (Array.isArray(arrays) || typeof custom !== 'object') {
+            throw new Error('arrays should be an object');
+        }
+
+        if (Array.isArray(custom) || typeof custom !== 'object') {
+            throw new Error('custom should be an object');
+        } else {
+            for (const prop of Object.keys(custom)) {
+                const descriptor = custom[prop];
+                if (descriptor.create === undefined || descriptor.restore === undefined) {
+                    throw new Error('custom should have create and restore methods for each custom property');
+                }
+            }
+        }
+
+        return true;
     }
 
     _aliasify(conf, prop) {

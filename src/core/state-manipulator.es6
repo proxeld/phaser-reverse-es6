@@ -264,4 +264,12 @@ export default class StateManipulator {
         return this._currentStateIndex;
     }
 
+    /**
+     * Returns amount of currently stored snapshots
+     * @return {Number} amount of currently stored snapshots
+     */
+    getSnapshotsAmount() {
+        return this._snapshots.length;
+    }
+
 }

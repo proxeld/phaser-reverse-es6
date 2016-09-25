@@ -171,4 +171,145 @@ describe('State Manipulator', () => {
             expect(dummyMemorable.x).to.eql(3);
         });
     });
+
+    describe('#discardAllSnapshots()', () => {
+        let stateManipulator;
+        let dummyMemorable;
+        let dummyCreator;
+
+        beforeEach(() => {
+            stateManipulator = new StateManipulator();
+            dummyMemorable = { x: 10 };
+            dummyCreator = new MementoCreator({
+                primitives: ['x'],
+            });
+            stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
+        });
+
+        it('should cause StateManipulator to have zero snapshots', () => {
+            stateManipulator.discardAllSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(0);
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(4);
+            stateManipulator.discardAllSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(0);
+        });
+    });
+
+    describe('#discardFutureSnapshots()', () => {
+        let stateManipulator;
+        let dummyMemorable;
+        let dummyCreator;
+
+        beforeEach(() => {
+            stateManipulator = new StateManipulator();
+            dummyMemorable = { x: 10 };
+            dummyCreator = new MementoCreator({
+                primitives: ['x'],
+            });
+            stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
+        });
+
+        it('should cause StateManipulator to have zero snapshots', () => {
+            stateManipulator.discardAllSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(0);
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            const amount = stateManipulator.getSnapshotsAmount();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount);
+            stateManipulator.shift(-1);
+            stateManipulator.discardFutureSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount - 1);
+            stateManipulator.shift(-2);
+            stateManipulator.discardFutureSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount - 3);
+        });
+
+        it('should not change snapshots amount when called multiple times in succession', () => {
+            stateManipulator.discardAllSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(0);
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            const amount = stateManipulator.getSnapshotsAmount();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount);
+            stateManipulator.shift(-1);
+            stateManipulator.discardFutureSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount - 1);
+            stateManipulator.discardFutureSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(amount - 1);
+        });
+
+        it('should always leave at least one snapshot (the one that is present)', () => {
+            stateManipulator.discardAllSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(0);
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.takeSnapshot();
+            stateManipulator.shift(-100);
+            stateManipulator.discardFutureSnapshots();
+            expect(stateManipulator.getSnapshotsAmount()).to.eql(1);
+        });
+    });
+
+    describe('#getLastSnapshot()', () => {
+        let stateManipulator;
+        let dummyMemorable;
+        let dummyCreator;
+
+        beforeEach(() => {
+            stateManipulator = new StateManipulator();
+            dummyMemorable = { x: 10 };
+            dummyCreator = new MementoCreator({
+                primitives: ['x'],
+            });
+            stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
+        });
+
+        it('should return last snapshot event after shifting current snapshot', () => {
+            stateManipulator.takeSnapshot();
+            dummyMemorable.x = 0;
+            stateManipulator.takeSnapshot();
+            dummyMemorable.x = 5;
+            stateManipulator.takeSnapshot();
+            dummyMemorable.x = 3;
+            const snapshot = stateManipulator.takeSnapshot();
+            stateManipulator.shift(-2);
+            expect(snapshot).to.equal(stateManipulator.getLastSnapshot());
+        });
+    });
+
+    describe('#getCurrentSnapshot()', () => {
+        let stateManipulator;
+        let dummyMemorable;
+        let dummyCreator;
+
+        beforeEach(() => {
+            stateManipulator = new StateManipulator();
+            dummyMemorable = { x: 10 };
+            dummyCreator = new MementoCreator({
+                primitives: ['x'],
+            });
+            stateManipulator.registerMemorable(dummyMemorable, dummyCreator);
+        });
+
+        it('should return last current snapshot after shifting', () => {
+            stateManipulator.takeSnapshot();
+            dummyMemorable.x = 0;
+            const snapshot = stateManipulator.takeSnapshot();
+            dummyMemorable.x = 5;
+            stateManipulator.takeSnapshot();
+            dummyMemorable.x = 3;
+            stateManipulator.takeSnapshot();
+            stateManipulator.shift(-2);
+            expect(snapshot).to.equal(stateManipulator.getCurrentSnapshot());
+        });
+    });
 });

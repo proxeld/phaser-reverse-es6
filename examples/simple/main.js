@@ -61,11 +61,13 @@ var create = function () {
         stateManipulator.discardFutureSnapshots();
     });
 
+
     var stateManipulator = new PhaserReverse.StateManipulator();
     this.stateManipulator = stateManipulator;
     this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.fadeOutTween, PhaserReverse.Creators.TWEEN);
+    this.debugger = new PhaserReverse.Debugger(game);
 
     document.getElementById('state-slider-wrapper').style.width = game.width + 'px';
     this.stateSlider = document.getElementById('state-slider');
@@ -130,6 +132,7 @@ var render = function () {
     game.debug.text('World x: ' + game.world.x + ' y: ' + game.world.y, 20, 350, '#fff', '24px');
     game.debug.cameraInfo(game.camera, 20, 500);
     game.debug.spriteInfo(this.fellow, 20, 400);
+    this.debugger.stateManipulatorInfo(this.stateManipulator, 20, 240);
 };
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {

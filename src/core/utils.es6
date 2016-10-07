@@ -59,6 +59,7 @@ export default {
 
         return obj;
     },
+    // alternative: https://www.npmjs.com/package/object-sizeof
     roughSizeOfObject(object) {
         // source: http://stackoverflow.com/questions/1248302/javascript-object-size#answer-11900218
         const objectList = [];

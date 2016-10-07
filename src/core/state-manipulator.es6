@@ -50,6 +50,11 @@ export default class StateManipulator {
 
         // class => mementoCreator
         this._creators = new Map();
+
+        // cached value of memory footprint (size of all snapshots)
+        // resetting value to 'undefined' will result in calculating memory footprint without considering cached value
+        // this is used for optimization
+        this._memoryFootprintCached = undefined;
     }
 
     /**
@@ -70,20 +75,24 @@ export default class StateManipulator {
     }
 
     /**
-     * Clears snapshot stack (discards all remembered snapshots)
+     * Clears snapshot stack (discards all remembered snapshots) and sets current index to proper value.
+     * Resets cache
      */
     discardAllSnapshots() {
         this._snapshots = [];
         this._currentStateIndex = -1;
+        this._memoryFootprintCached = undefined;
     }
 
     /**
      * Discard all taken snapshots that represent the future.
      * It means that we restored snapshot from the past and we do not want to
      * be able to store all snapshots taken after the snapshot we reverted to
+     * Resets cache
      */
     discardFutureSnapshots() {
         this._snapshots.splice(this._currentStateIndex + 1);
+        this._memoryFootprintCached = undefined;
     }
 
     /**
@@ -144,6 +153,9 @@ export default class StateManipulator {
                 data: creator.create(memorable),
             });
         }
+
+        // add value of size of currently taken snapshot
+        this._memoryFootprintCached += this.roughSnapshotSize(snapshot);
 
         return snapshot;
     }
@@ -239,6 +251,34 @@ export default class StateManipulator {
         return targetSnapshot;
     }
 
+    /**
+     * Calculates rough size of memory usage by all snapshots
+     * @param forceRecalculate force state manipulator to recalculate (prevent from using cached value)
+     * @return {number}
+     */
+    roughMemoryFootprint(forceRecalculate = false) {
+        let size = this._memoryFootprintCached || 0;
+
+        // refresh all calculations
+        if (size === 0 || forceRecalculate) {
+            for (const snapshot of this._snapshots) {
+                size += this.roughSnapshotSize(snapshot);
+            }
+
+            // cache for future
+            this._memoryFootprintCached = size;
+            log.info('Recalculating memory footprint:', size);
+        }
+
+        return size;
+    }
+
+    /**
+     * Calculates rough size of memory that is used by given snapshot
+     * It is a sum of sizes of all mementos
+     * @param snapshot
+     * @return {number}
+     */
     roughSnapshotSize(snapshot) {
         let size = 0;
 
@@ -249,6 +289,11 @@ export default class StateManipulator {
         return size;
     }
 
+    /**
+     * Calculates rough size of memory that is used by memento
+     * @param memento
+     * @return {number}
+     */
     roughMementoSize(memento) {
         if (this._memorables.has(memento.memorable)) {
             const creator = this._memorables.get(memento.memorable);

@@ -21,22 +21,26 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-import MementoCreator from './core/memento-creator.es6';
-import StateManipulator from './core/state-manipulator.es6';
-import Creators from './core/creators.es6';
-import Debugger from './utils/debugger.es6';
 
-console.log(
-    '%c⏳ PhaserReverse (v0.0.1) ⏳ Made with %c♥%c by proxeld',
-    'background: #222; color: #bada55',
-    'background: #222; color: #ff1111',
-    'background: #222; color: #bada55'
-);
+export default class Debugger {
+    constructor(game) {
+        this.game = game;
+    }
 
-// Library API
-export {
-    MementoCreator,
-    StateManipulator,
-    Creators,
-    Debugger,
-};
+    stateManipulatorInfo(stateManipulator, x = 0, y = 0, color = '#ffffff') {
+        const lastSnapshotSize = stateManipulator.roughSnapshotSize(stateManipulator.getLastSnapshot());
+        const FRAME_RATE = 60;
+        const MBPerSecond = ((lastSnapshotSize * FRAME_RATE) / 1024) / 1024;
+        const MBPerHour = MBPerSecond*60*60;
+        const memoryFootprint = (stateManipulator.roughMemoryFootprint() / 1024) / 1024;
+
+        this.game.debug.start(x, y, color);
+
+        this.game.debug.line(`Last snapshot size: ${lastSnapshotSize} Bytes`);
+        this.game.debug.line(`Memory footprint: ${MBPerSecond.toFixed(4)} MB/s`);
+        this.game.debug.line(`Memory footprint: ${MBPerHour.toFixed(2)} MB/hour`);
+        this.game.debug.line(`Memory footprint: ${memoryFootprint.toFixed(2)} MB`);
+
+        this.game.debug.stop();
+    }
+}

@@ -114,6 +114,15 @@ export default class MementoCreator {
             bytes += utils.roughSizeOfObject(utils.getProperty(memento, alias));
         }
 
+        // this is potentially dangerous
+        // custom mementos has no defined structure
+        for (const key of Object.keys(this.config.custom)) {
+            const alias = this._aliasify('custom', key);
+            const value = utils.getProperty(memento, alias);
+            bytes += utils.roughSizeOfObject(value);
+        }
+
+
         for (const prop of Object.keys(this.config.nested)) {
             const nestedCreator = this.config.nested[prop];
             const alias = this._aliasify('nested', prop);

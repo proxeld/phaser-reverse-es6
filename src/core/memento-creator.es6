@@ -37,11 +37,23 @@ const configDefault = {
 };
 
 export default class MementoCreator {
+    /**
+     * Initializes MementoCreator
+     * Config object should have following structure:
+     * // TODO: describe config structure
+     * @param {object} config
+     */
     constructor(config) {
         this.config = Object.assign({}, configDefault, config);
         MementoCreator._validateConfig(this.config);
     }
 
+    /**
+     * Primitive config validation to prevent most common errors asap
+     * @param {object} config configuration object
+     * @return {boolean} true if config is valid, false otherwise
+     * @private
+     */
     static _validateConfig(config) {
         const { primitives, refs, nested, custom, arrays } = config;
 
@@ -69,6 +81,15 @@ export default class MementoCreator {
         return true;
     }
 
+    /**
+     * Check if alias for given property (in given type - @param conf) is available
+     * This method is used to prevent clashes when the same propery has to be saved in memento in more than one way
+     * (e.g. as reference and custom)
+     * @param conf type of property (primitives/nested/refs/custom/arrays)
+     * @param prop property to make alias for
+     * @return {string} aliased property name or passed @prop if alias not found/specified
+     * @private
+     */
     _aliasify(conf, prop) {
         if (this.config.aliases[conf] && this.config.aliases[conf][prop]) {
             return this.config.aliases[conf][prop];
@@ -77,6 +98,39 @@ export default class MementoCreator {
         return prop;
     }
 
+    /**
+     * Returns rough size of the memento in bytes
+     * Used for debugging
+     * @param memento memento object returned by {@link MementoCreator.create} method of this memento creator
+     * @return {number} rough object size (in bytes)
+     * @private
+     * // TODO: make it more accurate (handle different types of properties)
+     */
+    _calculateMementoDataSize(memento) {
+        let bytes = 0;
+
+        for (const prop of this.config.primitives) {
+            const alias = this._aliasify('primitives', prop);
+            bytes += utils.roughSizeOfObject(utils.getProperty(memento, alias));
+        }
+
+        for (const prop of Object.keys(this.config.nested)) {
+            const nestedCreator = this.config.nested[prop];
+            const alias = this._aliasify('nested', prop);
+            const nestedData = utils.getProperty(memento, alias);
+            bytes += nestedCreator._calculateMementoDataSize(nestedData);
+        }
+
+        return bytes;
+    }
+
+    /**
+     * Creates memento of passed originator. To determine what properties should be remembered and how should they be
+     * remembered configuration object is used that was passed to constructor of {@link MementoCreator.constructor}
+     * @param originator
+     * @see {@link MementoCreator.restore}
+     * @return {object} memento of originator
+     */
     create(originator) {
         const data = {};
 
@@ -142,6 +196,12 @@ export default class MementoCreator {
         return data;
     }
 
+    /**
+     * Restores memento created by {@link MementoCreator.create} method
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     */
     restore(originator, memento) {
         for (const prop of this.config.primitives) {
             const alias = this._aliasify('primitives', prop);

@@ -239,6 +239,25 @@ export default class StateManipulator {
         return targetSnapshot;
     }
 
+    roughSnapshotSize(snapshot) {
+        let size = 0;
+
+        for (const memento of snapshot.mementos) {
+            size += this.roughMementoSize(memento);
+        }
+
+        return size;
+    }
+
+    roughMementoSize(memento) {
+        if (this._memorables.has(memento.memorable)) {
+            const creator = this._memorables.get(memento.memorable);
+            return creator._calculateMementoDataSize(memento.data);
+        }
+
+        throw new Error('Memorable object from memento has no associated creator. Creator:', memento);
+    }
+
     /**
      * Returns last state from the state stack. That is the last snapshot that was taken by takeSnapshot method
      * NOTE: last state is not always equal to current state. Last means last element of an array.

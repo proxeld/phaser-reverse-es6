@@ -5,6 +5,7 @@
   "author": "Maciej (proxeld) Urbanek",
   "license": "MIT License",
   "scripts": {
+    "start": "python -m SimpleHTTPServer",
     "test": "mocha --compilers es6:babel-register --require babel-polyfill --recursive test",
     "test-watch": "mocha --compilers es6:babel-register --require babel-polyfill --recursive --watch test",
     "watch": "gulp watch",

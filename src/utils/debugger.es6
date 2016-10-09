@@ -31,7 +31,7 @@ export default class Debugger {
         const lastSnapshotSize = stateManipulator.roughSnapshotSize(stateManipulator.getLastSnapshot());
         const FRAME_RATE = 60;
         const MBPerSecond = ((lastSnapshotSize * FRAME_RATE) / 1024) / 1024;
-        const MBPerHour = MBPerSecond*60*60;
+        const MBPerHour = MBPerSecond * 60 * 60;
         const memoryFootprint = (stateManipulator.roughMemoryFootprint() / 1024) / 1024;
 
         this.game.debug.start(x, y, color);

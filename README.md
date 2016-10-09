@@ -93,3 +93,8 @@ npm run eslint
 - bundling with minification (browserify, gulp-uglify) 
 - running tests from both console and browser (mocha, browserify)
 - getting code coverage (istanbul)
+
+
+### TODO List
+- snapshot minification
+- keys in memento object minification

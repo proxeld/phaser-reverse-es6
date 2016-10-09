@@ -78,8 +78,11 @@ export default {
             } else if (typeof value === 'object' && objectList.indexOf(value) === -1) {
                 objectList.push(value);
 
-                for (const i of Object.keys(value)) {
-                    stack.push(value[i]);
+                for (const key of Object.keys(value)) {
+                    // add length of the key
+                    bytes += key.length * 2;
+
+                    stack.push(value[key]);
                 }
             }
         }

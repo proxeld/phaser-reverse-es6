@@ -41,6 +41,7 @@ export default class MementoCreator {
      * Initializes MementoCreator
      * Config object should have following structure:
      * // TODO: describe config structure
+     * // TODO: minification by using shorter keys for memento objects (http://stackoverflow.com/questions/9719676/javascript-object-sizes)
      * @param {object} config
      */
     constructor(config) {
@@ -106,7 +107,7 @@ export default class MementoCreator {
      * @private
      * // TODO: make it more accurate (handle different types of properties)
      */
-    _calculateMementoDataSize(memento) {
+    _calculateMementoSize(memento) {
         let bytes = 0;
 
         for (const prop of this.config.primitives) {
@@ -127,7 +128,7 @@ export default class MementoCreator {
             const nestedCreator = this.config.nested[prop];
             const alias = this._aliasify('nested', prop);
             const nestedData = utils.getProperty(memento, alias);
-            bytes += nestedCreator._calculateMementoDataSize(nestedData);
+            bytes += nestedCreator._calculateMementoSize(nestedData);
         }
 
         return bytes;

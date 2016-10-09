@@ -297,7 +297,7 @@ export default class StateManipulator {
     roughMementoSize(memento) {
         if (this._memorables.has(memento.memorable)) {
             const creator = this._memorables.get(memento.memorable);
-            return creator._calculateMementoDataSize(memento.data);
+            return creator._calculateMementoSize(memento.data);
         }
 
         throw new Error('Memorable object from memento has no associated creator. Creator:', memento);

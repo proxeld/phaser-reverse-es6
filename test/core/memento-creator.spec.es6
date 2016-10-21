@@ -259,10 +259,12 @@ describe('Memento Creator', () => {
         it('should be able to restore deep property', () => {
             creator = new MementoCreator({
                 primitives: ['position.x'],
+                refs: ['position.y'],
             });
             const memento = creator.create(obj);
 
             obj.position.x = 51;
+            obj.position.y = 10;
             creator.restore(obj, memento);
             expect(obj.position).to.eql({
                 x: 10,
@@ -481,6 +483,58 @@ describe('Memento Creator', () => {
             creator.restore(memorable, memento);
 
             expect(memorable).to.eql({ x: 100 });
+        });
+
+        it('should not affect memorable object\'s property if that property is missing from memento object', () => {
+            creator = new MementoCreator({
+                primitives: ['x'],
+                refs: ['y'],
+                nested: {
+                    scale: new MementoCreator({
+                        primitives: ['x'],
+                    }),
+                },
+                custom: {
+                    'rot.angle': {
+                        create: (originator) => originator.rot.angle - 1,
+                        restore: (originator, value) => originator.rot = value,
+                    },
+                },
+            });
+
+            const memorableState1 = {
+                x: 100,
+                y: 200,
+                scale: {
+                    x: 1,
+                },
+                rot: 90,
+            };
+
+            const memorableState2 = {
+                x: 10,
+                y: 20,
+                scale: {
+                    x: 2,
+                },
+                rot: 180,
+            };
+
+            const memorableState2Copy = Object.assign({}, memorableState2);
+
+            let mementoOfState1 = creator.create(memorableState1);
+
+            // delete some properties from memento - possibly as a result from minification
+            mementoOfState1 = {};
+
+            // sanity check
+            expect(mementoOfState1).to.eql({});
+
+            // restore object state
+            creator.restore(memorableState2, mementoOfState1);
+
+            // nothing should change, because memento no longer remembers x and y properties
+            expect(memorableState2).to.eql(memorableState2Copy);
         });
     });
 });

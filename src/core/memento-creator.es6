@@ -24,7 +24,7 @@
 import clone from 'clone';
 import utils from './utils.es6';
 
-// property is a common name for all primitives, refs, nested, custom and arrays
+// remembered property is a common name for all primitives, refs, nested, custom and arrays
 // primitives does not necessarily be primitive values (they will be copied regardless of the type)
 const configDefault = {
     primitives: [],
@@ -213,17 +213,49 @@ export default class MementoCreator {
      * @see {@link MementoCreator.create}
      */
     restore(originator, memento) {
+        // TODO: break it up into subfunctions: e.g. _restorePrimitives(originator, memento)
+
+        // -- Primitives restore part --
+        // For primitives the values from memento are copied and set on originator object
+        // Aliases are possible to prevent clashes with different kind of remembered properties
         for (const prop of this.config.primitives) {
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('primitives', prop);
-            const value = clone(utils.getProperty(memento, alias));
-            utils.setProperty(originator, prop, value);
+
+            // check if remembered property exists in memento
+            // the reason for this is that it could have been removed through the memento minification
+            if (utils.hasProperty(memento, alias)) {
+                // if so, extract remembered property from memento and copy it's value
+                const value = clone(utils.getProperty(memento, alias));
+
+                // set that copied value on originator object - use original name, not alias - aliases are only used internally
+                utils.setProperty(originator, prop, value);
+            }
+
+            // if remembered property does not exist in memento then simply skip it
         }
 
+        // -- References restore part --
+        // For references the values from memento are simply assigned on originator object (not copied)
+        // Aliases are possible to prevent clashes with different kind of remembered properties
         for (const ref of this.config.refs) {
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('refs', ref);
-            utils.setProperty(originator, ref, memento[alias]);
+
+            // check if remembered property exists in memento
+            // the reason for this is that it could have been removed through the memento minification
+            if (utils.hasProperty(memento, alias)) {
+                // if so, extract remembered property from memento (not copied)
+                const value = utils.getProperty(memento, alias);
+
+                // set that value on originator object - use original name, not alias - aliases are only used internally
+                utils.setProperty(originator, ref, value);
+            }
+
+            // if remembered property does not exist in memento then simply skip it
         }
 
+        // TODO: Fix to work with tests
         for (const key of Object.keys(this.config.custom)) {
             const descriptor = this.config.custom[key];
             const alias = this._aliasify('custom', key);
@@ -231,13 +263,26 @@ export default class MementoCreator {
             descriptor.restore(originator, value);
         }
 
+        // -- Nested restore part --
+        // For nested remembered properties use another memento creator to create memento
+        // This is especially useful when some object has as a property another object for which
+        // we already have creator prepared
+        // Aliases are possible to prevent clashes with different kind of remembered properties
         for (const prop of Object.keys(this.config.nested)) {
+            // retrieve nested memento creator from configuration
             const nestedCreator = this.config.nested[prop];
+
+            // retrieve nested object for which nested creator will be used
             const nestedObj = utils.getProperty(originator, prop);
+
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('nested', prop);
+
+            // retrieve nested memento
             const nestedMemento = utils.getProperty(memento, alias);
+
+            // restore state of nestedObj using nested memento creator and nested memento
             nestedCreator.restore(nestedObj, nestedMemento);
-            // TODO: check if it's necessary: utils.setProperty(originator, prop, nestedObj);
         }
 
         // TODO: consider some optimization: right now every time memento is restored it needs to clear all array and then

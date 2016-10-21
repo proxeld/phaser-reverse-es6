@@ -76,13 +76,13 @@ describe('Utils', () => {
     });
 
     describe('#setProperty()', () => {
-        it('value should default to {}', () => {
+        it('value should default to undefined', () => {
             const obj = { x: 10 };
             const objCopy = Object.assign({}, obj);
             utils.setProperty(obj);
             expect(obj).to.eql(objCopy);
             utils.setProperty(obj, 'x');
-            expect(obj).to.eql({ x: {} });
+            expect(obj).to.eql({ x: undefined });
         });
 
         it('should be able to set new shallow property', () => {
@@ -115,6 +115,40 @@ describe('Utils', () => {
                     y: 20,
                 },
             });
+        });
+    });
+
+    describe('#hasProperty()', () => {
+        it('should throw exception if dotted property is not string', () => {
+            expect(() => {
+                utils.hasProperty({}, null);
+            }).to.throw(Error);
+            expect(() => {
+                utils.hasProperty({}, undefined);
+            }).to.throw(Error);
+            expect(() => {
+                utils.hasProperty({}, {});
+            }).to.throw(Error);
+        });
+
+        it('should return true if property exist (shallow)', () => {
+            const obj = { position: { x: undefined } };
+            expect(utils.hasProperty(obj, 'position')).to.eql(true);
+        });
+
+        it('should return true if property exist (deep)', () => {
+            const obj = { position: { x: {} } };
+            expect(utils.hasProperty(obj, 'position.x')).to.eql(true);
+        });
+
+        it('should return false if property does not exist (shallow)', () => {
+            const obj = { position: { x: 1 } };
+            expect(utils.hasProperty(obj, 'x')).to.eql(false);
+        });
+
+        it('should return false if property does not exist (deep)', () => {
+            const obj = { position: { x: 1 } };
+            expect(utils.hasProperty(obj, 'position.y')).to.eql(false);
         });
     });
 });

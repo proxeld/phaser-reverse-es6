@@ -500,6 +500,11 @@ describe('Memento Creator', () => {
                         restore: (originator, value) => originator.rot = value,
                     },
                 },
+                arrays: {
+                    tweens: new MementoCreator({
+                        primitives: ['x'],
+                    }),
+                },
             });
 
             const memorableState1 = {
@@ -509,6 +514,7 @@ describe('Memento Creator', () => {
                     x: 1,
                 },
                 rot: 90,
+                tweens: [{ x: 0 }, { x: 1 }],
             };
 
             const memorableState2 = {
@@ -518,9 +524,18 @@ describe('Memento Creator', () => {
                     x: 2,
                 },
                 rot: 180,
+                tweens: [{ x: 2 }, { x: 3 }],
             };
 
-            const memorableState2Copy = Object.assign({}, memorableState2);
+            const memorableState2Copy = {
+                x: 10,
+                y: 20,
+                scale: {
+                    x: 2,
+                },
+                rot: 180,
+                tweens: [{ x: 2 }, { x: 3 }],
+            };
 
             let mementoOfState1 = creator.create(memorableState1);
 
@@ -533,7 +548,7 @@ describe('Memento Creator', () => {
             // restore object state
             creator.restore(memorableState2, mementoOfState1);
 
-            // nothing should change, because memento no longer remembers x and y properties
+            // nothing should change, because memento no longer remembers any properties
             expect(memorableState2).to.eql(memorableState2Copy);
         });
     });

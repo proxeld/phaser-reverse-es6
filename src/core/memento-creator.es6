@@ -64,10 +64,21 @@ export default class MementoCreator {
             throw new Error('refs should be an array');
         } else if (Array.isArray(nested) || typeof nested !== 'object') {
             throw new Error('nested should be an object');
-        } else if (Array.isArray(arrays) || typeof custom !== 'object') {
-            throw new Error('arrays should be an object');
         }
 
+        // arrays validation
+        if (Array.isArray(arrays) || typeof custom !== 'object') {
+            throw new Error('arrays should be an object');
+        } else {
+            for (const prop of Object.keys(arrays)) {
+                const creator = arrays[prop];
+                if (!(creator instanceof MementoCreator || creator === undefined)) {
+                    throw new Error('arrays should have MementoCreator instance or undefined as a value for each property');
+                }
+            }
+        }
+
+        // custom validation
         if (Array.isArray(custom) || typeof custom !== 'object') {
             throw new Error('custom should be an object');
         } else {
@@ -142,6 +153,8 @@ export default class MementoCreator {
      * @return {object} memento of originator
      */
     create(originator) {
+        // TODO: break it up into subfunctions: e.g. _restorePrimitives(originator, memento)
+        // TODO: add comments in similar way as in restore methods
         const data = {};
 
         // iterate over primitives of originator and clone them into the memento
@@ -189,12 +202,12 @@ export default class MementoCreator {
                 // if creator is specified, then create memento for each element of an array
                 if (inArrayElemMementoCreator) {
                     value.push({
-                        ref: elem,
+                        __ref: elem,
                         memento: inArrayElemMementoCreator.create(elem),
                     });
                 } else {
                     value.push({
-                        ref: elem,
+                        __ref: elem,
                     });
                 }
             }
@@ -207,17 +220,15 @@ export default class MementoCreator {
     }
 
     /**
-     * Restores memento created by {@link MementoCreator.create} method
+     * Primitives remembered properties from memento are copied and set on originator object
+     * Aliases are possible to prevent clashes with different kind of remembered properties
      * @param originator should be the same object that was passed to create method
      * @param memento should be memento returned by create method
      * @see {@link MementoCreator.create}
+     * @private
      */
-    restore(originator, memento) {
-        // TODO: break it up into subfunctions: e.g. _restorePrimitives(originator, memento)
+    _restorePrimitives(originator, memento) {
 
-        // -- Primitives restore part --
-        // For primitives the values from memento are copied and set on originator object
-        // Aliases are possible to prevent clashes with different kind of remembered properties
         for (const prop of this.config.primitives) {
             // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('primitives', prop);
@@ -234,10 +245,17 @@ export default class MementoCreator {
 
             // if remembered property does not exist in memento then simply skip it
         }
+    }
 
-        // -- References restore part --
-        // For references the values from memento are simply assigned on originator object (not copied)
-        // Aliases are possible to prevent clashes with different kind of remembered properties
+    /**
+     * For references the values from memento are simply assigned on originator object (not copied)
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     * @private
+     */
+    _restoreRefs(originator, memento) {
         for (const ref of this.config.refs) {
             // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('refs', ref);
@@ -254,29 +272,58 @@ export default class MementoCreator {
 
             // if remembered property does not exist in memento then simply skip it
         }
+    }
 
-        // TODO: Fix to work with tests
+    /**
+     * For custom remembered properties use provided descriptor to restore memento
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     * @private
+     */
+    _restoreCustom(originator, memento) {
         for (const key of Object.keys(this.config.custom)) {
-            const descriptor = this.config.custom[key];
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('custom', key);
-            const value = utils.getProperty(memento, alias);
-            descriptor.restore(originator, value);
-        }
 
-        // -- Nested restore part --
-        // For nested remembered properties use another memento creator to create memento
-        // This is especially useful when some object has as a property another object for which
-        // we already have creator prepared
-        // Aliases are possible to prevent clashes with different kind of remembered properties
+            // retrieve property descriptor (object with create() and restore() methods
+            const descriptor = this.config.custom[key];
+
+            // check if remembered property exists in memento
+            // the reason for this is that it could have been removed through the memento minification
+            if (utils.hasProperty(memento, alias)) {
+                // if so, extract remembered property from memento (not copied)
+                const value = utils.getProperty(memento, alias);
+
+                // restore state of nestedObj using descriptor
+                descriptor.restore(originator, value);
+            }
+
+            // if remembered property does not exist in memento then simply skip it
+        }
+    }
+
+    /**
+     * For nested remembered properties use another memento creator to restore memento
+     * This is especially useful when object's property value is another type of object for which
+     * we already have creator prepared (e.g. body on sprite)
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     * @private
+     */
+    _restoreNested(originator, memento) {
         for (const prop of Object.keys(this.config.nested)) {
+            // resolve final name of the remembered property used in the memento
+            const alias = this._aliasify('nested', prop);
+
             // retrieve nested memento creator from configuration
             const nestedCreator = this.config.nested[prop];
 
             // retrieve nested object for which nested creator will be used
             const nestedObj = utils.getProperty(originator, prop);
-
-            // resolve final name of the remembered property used in the memento
-            const alias = this._aliasify('nested', prop);
 
             // retrieve nested memento
             const nestedMemento = utils.getProperty(memento, alias);
@@ -284,32 +331,76 @@ export default class MementoCreator {
             // restore state of nestedObj using nested memento creator and nested memento
             nestedCreator.restore(nestedObj, nestedMemento);
         }
+    }
 
+    /**
+     * For arrays remembered properties restore array elements adding all references from memento to newly created array
+     * and optionally restoring their state using provided MementoCreator (per element)
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     * @private
+     */
+    _restoreArrays(originator, memento) {
         // TODO: consider some optimization: right now every time memento is restored it needs to clear all array and then
-        // re-add elements
         for (const prop of Object.keys(this.config.arrays)) {
-            const inArrayElemMementoCreator = this.config.arrays[prop];
-            // value is always a new array
-            const memorable = utils.getProperty(originator, prop, []);
-            const value = memorable;
-            // clear array (this will affect all references to the array)
-            memorable.length = 0;
-
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('arrays', prop);
-            const arrayMemento = utils.getProperty(memento, alias);
 
-            for (const arrayElemMemento of arrayMemento) {
-                const elemRef = arrayElemMemento.ref;
+            // retrieve MementoCreator used for each element in array
+            const inArrayElemMementoCreator = this.config.arrays[prop];
 
-                // if creator is specified, then restore memento for each element of an array
-                if (inArrayElemMementoCreator) {
-                    inArrayElemMementoCreator.restore(elemRef, arrayElemMemento.memento);
+            // check if remembered property exists in memento
+            // the reason for this is that it could have been removed through the memento minification
+            if (utils.hasProperty(memento, alias)) {
+                // retrieve current array from originator
+                const memorable = utils.getProperty(originator, prop, []);
+
+                // clear array (this will affect all references to the array)
+                memorable.length = 0;
+
+                // retrieve array memento
+                const arrayMemento = utils.getProperty(memento, alias);
+
+                // iterate over mementos of array elements
+                for (const arrayElemMemento of arrayMemento) {
+                    // get reference to original element__ref
+                    // this is necessary, because we need to have a way to know to which object from array apply it's memento
+                    const elemRef = arrayElemMemento.__ref;
+
+                    // if creator is specified, then restore memento for current element of an array
+                    if (inArrayElemMementoCreator) {
+                        inArrayElemMementoCreator.restore(elemRef, arrayElemMemento.memento);
+                    }
+
+                    // push reference to original array
+                    memorable.push(elemRef);
                 }
 
-                value.push(elemRef);
+                // set final result on the originator
+                utils.setProperty(originator, prop, memorable);
             }
 
-            utils.setProperty(originator, prop, value);
+            // if remembered property does not exist in memento then simply skip it
         }
+    }
+
+    /**
+     * Restores memento created by {@link MementoCreator.create} method
+     * @param originator should be the same object that was passed to create method
+     * @param memento should be memento returned by create method
+     * @see {@link MementoCreator.create}
+     */
+    restore(originator, memento) {
+        this._restorePrimitives(originator, memento);
+
+        this._restoreRefs(originator, memento);
+
+        this._restoreCustom(originator, memento);
+
+        this._restoreNested(originator, memento);
+
+        this._restoreArrays(originator, memento);
     }
 }

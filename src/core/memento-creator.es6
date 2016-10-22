@@ -24,25 +24,34 @@
 import clone from 'clone';
 import utils from './utils.es6';
 
-// remembered property is a common name for all primitives, refs, nested, custom and arrays
-// primitives does not necessarily be primitive values (they will be copied regardless of the type)
+/**
+ * Remembered property is a common name for all primitives, refs, nested, custom and arrays
+ * Primitives does not necessarily be primitive values (they will be copied regardless of the type)
+ * Aliases are used for changing name of the property in the memento (to prevent name clashes)
+ * @type {{primitives: Array, refs: Array, nested: {}, custom: {}, arrays: {}, aliases: {}}}
+ */
 const configDefault = {
     primitives: [],
     refs: [],
     nested: {},
     custom: {},
     arrays: {},
-    // for changing name of the property in the memento (to prevent clashing)
     aliases: {},
 };
 
+/**
+ * Class for creating and restoring memento of different class of objects
+ * @class
+ */
 export default class MementoCreator {
     /**
      * Initializes MementoCreator
      * Config object should have following structure:
-     * // TODO: describe config structure
-     * // TODO: minification by using shorter keys for memento objects (http://stackoverflow.com/questions/9719676/javascript-object-sizes)
+     * TODO: describe config structure
+     * TODO: minification by using shorter keys for memento objects:
+     * (http://stackoverflow.com/questions/9719676/javascript-object-sizes)
      * @param {object} config
+     * @constructor
      */
     constructor(config) {
         this.config = Object.assign({}, configDefault, config);
@@ -116,7 +125,7 @@ export default class MementoCreator {
      * @param memento memento object returned by {@link MementoCreator.create} method of this memento creator
      * @return {number} rough object size (in bytes)
      * @private
-     * // TODO: make it more accurate (handle different types of properties)
+     * TODO: make it more accurate (handle different types of properties)
      */
     _calculateMementoSize(memento) {
         let bytes = 0;
@@ -146,58 +155,131 @@ export default class MementoCreator {
     }
 
     /**
-     * Creates memento of passed originator. To determine what properties should be remembered and how should they be
-     * remembered configuration object is used that was passed to constructor of {@link MementoCreator.constructor}
+     * Primitive remembered properties are stored as a copy of their original value (from originator)
+     * Primitives should be primitive values or small objects with only a few properties
+     * Aliases are possible to prevent clashes with different kind of remembered properties
      * @param originator
-     * @see {@link MementoCreator.restore}
-     * @return {object} memento of originator
+     * @param vessel container on which remembered properties will be set
+     * @private
      */
-    create(originator) {
-        // TODO: break it up into subfunctions: e.g. _restorePrimitives(originator, memento)
-        // TODO: add comments in similar way as in restore methods
-        const data = {};
-
-        // iterate over primitives of originator and clone them into the memento
-        // primitives should be primitive values or small objects with only few properties
+    _createPrimitivesMemento(originator, vessel) {
         for (const prop of this.config.primitives) {
+            // resolve final name of the remembered property used in the memento
+            const alias = this._aliasify('primitives', prop);
+
+            // clone property
             // property cannot be circular object
             const value = clone(utils.getProperty(originator, prop), false);
-            const alias = this._aliasify('primitives', prop);
-            utils.setProperty(data, alias, value);
-        }
 
-        // copy references, not their values
-        // this can prevent garbage collection
+            // save property copy on the vessel
+            utils.setProperty(vessel, alias, value);
+        }
+    }
+
+    /**
+     * Refs remembered properties are stored as a result of assignment
+     * (objects are not copied, only another reference is created)
+     * Note: This can prevent garbage collection of some objects
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator
+     * @param vessel container on which remembered properties will be set
+     * @private
+     */
+    _createRefsMemento(originator, vessel) {
         for (const ref of this.config.refs) {
-            const value = utils.getProperty(originator, ref);
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('refs', ref);
-            utils.setProperty(data, alias, value);
-        }
 
-        // custom behaviour for properties that need such
+            // create new reference to the value hold by originator
+            const value = utils.getProperty(originator, ref);
+
+            // save that reference on the vessel
+            utils.setProperty(vessel, alias, value);
+        }
+    }
+
+    /**
+     * Custom remembered properties are stored (and restored) using user-provided operation
+     * It can be done in configuration process (while creating MementoCreator instance)
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator
+     * @param vessel container on which remembered properties will be set
+     * @private
+     */
+    _createCustomMemento(originator, vessel) {
         for (const key of Object.keys(this.config.custom)) {
-            const descriptor = this.config.custom[key];
-            const value = descriptor.create(originator);
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('custom', key);
-            utils.setProperty(data, alias, value);
-        }
 
-        // nested creators
+            // retrieve descriptor (object with create() and restore() methods) from configuartion
+            const descriptor = this.config.custom[key];
+
+            // create memento of the remembered property using provided descriptor
+            const value = descriptor.create(originator);
+
+            // save that property memento on the vessel
+            utils.setProperty(vessel, alias, value);
+        }
+    }
+
+    /**
+     * Nested remembered properties are stored (and restored) using user-provided MementoCreator
+     * It can be done in configuration process (while creating MementoCreator instance)
+     * It is especially useful when MementoCreator, for some property that is present in originator,
+     * has already been created and can be reused
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator
+     * @param vessel container on which remembered properties will be set
+     * @private
+     */
+    _createNestedMemento(originator, vessel) {
         for (const prop of Object.keys(this.config.nested)) {
-            const nestedCreator = this.config.nested[prop];
-            const nestedObj = utils.getProperty(originator, prop);
-            const memento = nestedCreator.create(nestedObj);
+            // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('nested', prop);
-            utils.setProperty(data, alias, memento);
-        }
 
-        // array handling
+            // retrieve MementoCreator for this specific prop from configuration
+            const nestedCreator = this.config.nested[prop];
+
+            // retrieve prop value
+            const nestedObj = utils.getProperty(originator, prop);
+
+            // use nested MementoCreator to create nested object memento
+            const memento = nestedCreator.create(nestedObj);
+
+            // save that object memento on the vessel
+            utils.setProperty(vessel, alias, memento);
+        }
+    }
+
+    /**
+     * Arrays remembered properties are stored as follows:
+     * - new array is created
+     * - for each element of that array
+     *   - if MementoCreator was specified (for element) then it's used to create element's memento
+     *   - reference to the element as well as optional memento of that element is push to the array
+     * - array from first step is set as a final memento of array remembered property (array from originator)
+     * This should ensure restoring array's element even if it was removed from it in the future
+     * Aliases are possible to prevent clashes with different kind of remembered properties
+     * @param originator
+     * @param vessel container on which remembered properties will be set
+     * @private
+     */
+    _createArraysMemento(originator, vessel) {
         for (const prop of Object.keys(this.config.arrays)) {
+            // resolve final name of the remembered property used in the memento
+            const alias = this._aliasify('arrays', prop);
+
+            // retrieve MementoCreator used for each element in array
             const inArrayElemMementoCreator = this.config.arrays[prop];
-            // value is always a new array
+
+            // create new array - which will be memento of originator prop
+            // it is always a new array
             const value = [];
+
+            // retrieve remembered property from originator
             const memorable = utils.getProperty(originator, prop, []);
 
+            // iterate over every element of originator's remembered property - originator's array
             for (const elem of memorable) {
                 // if creator is specified, then create memento for each element of an array
                 if (inArrayElemMementoCreator) {
@@ -212,11 +294,33 @@ export default class MementoCreator {
                 }
             }
 
-            const alias = this._aliasify('arrays', prop);
-            utils.setProperty(data, alias, value);
+            // save memento on the vessel
+            utils.setProperty(vessel, alias, value);
         }
+    }
 
-        return data;
+    /**
+     * Creates memento of passed originator. To determine what properties should be remembered and how should they be
+     * remembered configuration object is used that was passed to constructor of {@link MementoCreator.constructor}
+     * @param originator
+     * @see {@link MementoCreator.restore}
+     * @return {object} memento of originator
+     */
+    create(originator) {
+        // create object for storing mementos of all kinds of remembered properties
+        const memento = {};
+
+        this._createPrimitivesMemento(originator, memento);
+
+        this._createRefsMemento(originator, memento);
+
+        this._createCustomMemento(originator, memento);
+
+        this._createNestedMemento(originator, memento);
+
+        this._createArraysMemento(originator, memento);
+
+        return memento;
     }
 
     /**
@@ -228,7 +332,6 @@ export default class MementoCreator {
      * @private
      */
     _restorePrimitives(originator, memento) {
-
         for (const prop of this.config.primitives) {
             // resolve final name of the remembered property used in the memento
             const alias = this._aliasify('primitives', prop);

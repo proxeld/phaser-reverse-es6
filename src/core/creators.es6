@@ -44,23 +44,8 @@ const creators = {
             'angularVelocity', 'damping', 'x', 'y', 'rotation'],
     }),
     TWEEN_MANAGER: new MementoCreator({
-        custom: {
-            // TODO: change this from custom to arrays
-            tweens: {
-                create: (originator) => {
-                    const tweens = [];
-
-                    // save information about tweens that are currently active
-                    for (const tween of originator._tweens) {
-                        tweens.push(tween);
-                    }
-
-                    return tweens;
-                },
-                restore: (originator, memento) => {
-                    originator._tweens = memento;
-                },
-            },
+        arrays: {
+            _tweens: undefined,
         },
     }),
     TWEEN_DATA: new MementoCreator({
@@ -72,7 +57,7 @@ const creators = {
             tweenData: {
                 create: originator => creators.TWEEN_DATA.create(originator.timeline[originator.current]),
                 restore: (originator, memento) => {
-                    // in current version we rely on the fact that primitives are restored ealier than
+                    // in current version we rely on the fact that primitives are restored earlier than
                     // customs are. This will cause current property on the originator to be already restored.
                     // For now it's fine, but we should not relay on internal implementation of creating memento...
                     creators.TWEEN_DATA.restore(originator.timeline[originator.current], memento);

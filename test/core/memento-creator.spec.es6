@@ -286,7 +286,7 @@ describe('Memento Creator', () => {
             expect(obj).to.eql(objCopy);
         });
 
-        it('should clone primitives which are objects', () => {
+        it('should clone primitive remembered properties which are objects', () => {
             creator = new MementoCreator({
                 primitives: ['position'],
             });

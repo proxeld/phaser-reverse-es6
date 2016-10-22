@@ -16,8 +16,10 @@ function create() {
     sprite.scale.set(0.5);
 
     //	It will end up at the middle of the game, as it's tweening TO the value given
-    var tween = game.add.tween(sprite).to( { y: game.world.centerY }, 4000, Phaser.Easing.Bounce.Out, true);
+    var tween = game.add.tween(sprite).to( { y: game.world.centerY, alpha: 0.2 }, 4000, Phaser.Easing.Bounce.Out, true);
 
+    ///////////////////////
+    // Added
     this.sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
     this.shiftKey = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
     this.shiftKey.onUp.add(function () {
@@ -43,6 +45,9 @@ function create() {
     };
 
     window.mainState = this;
+
+    // End Added
+    //////////////////////////
 }
 
 function update() {

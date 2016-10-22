@@ -77,7 +77,7 @@ export default class MementoCreator {
 
         // arrays validation
         if (Array.isArray(arrays) || typeof custom !== 'object') {
-            throw new Error('arrays should be an object');
+            throw new Error('"arrays" value (in config) should be an object');
         } else {
             for (const prop of Object.keys(arrays)) {
                 const creator = arrays[prop];

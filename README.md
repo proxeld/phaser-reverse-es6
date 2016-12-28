@@ -98,3 +98,10 @@ npm run eslint
 ### TODO List
 - snapshot minification
 - keys in memento object minification
+
+### What is problematic
+- how to handle objects when they are removed?
+    - prevent them from being garbage-collected?
+    - let them be garbage-collected and when manipulating time and 
+    encountering memento of removed object create new object of the 
+    same type and restore memento?

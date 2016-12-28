@@ -17,7 +17,8 @@
   },
   "browserify": {
     "transform": [
-      "babelify"
+      "babelify",
+      "node-lessify"
     ]
   },
   "keywords": [
@@ -47,6 +48,7 @@
     "gulp-util": "~3.0.7",
     "istanbul": "^1.1.0-alpha.1",
     "mocha": "~3.0.2",
+    "node-lessify": "^0.1.4",
     "phantomjs": "~2.1.7",
     "vinyl-buffer": "~1.0.0",
     "vinyl-source-stream": "~1.1.0",

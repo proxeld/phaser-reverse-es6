@@ -103,6 +103,7 @@ export default class StateManipulator {
      * memorable's construction function (class). This is done by caching creators for previously registered objects.
      * @throws Error if creator was not specified and cannot be found in cache
      * @see PhaserReverse.Creators for predefined creators for Phaser built-in objects
+     * TODO: consider prevention of registration the same object multiple times
      */
     registerMemorable(memorable, creator) {
         // check if creator was specified explicitly

@@ -1,0 +1,60 @@
+@primary-400: #EF5350;
+@primary-500: #F44336;
+@primary-600: #E53935;
+@primary-700: #D32F2F;
+@primary-800: #C62828;
+@primary-900: #B71C1C;
+@secondary-400: #19A69A;
+@secondary-600: #00897B;
+@secondary-900: #004D40;
+@grey-50: #FAFAFA;
+@grey-50: #FAFAFA;
+@grey-50: #FAFAFA;
+@grey-100: #F5F5F5;
+@grey-200: #EEEEEE;
+
+#debug-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: @primary-400;
+  padding: 8px 0;
+
+  #state-slider-wrapper {
+    display: flex;
+    flex-direction: row;
+
+    & > * {
+      margin: 3px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: @grey-50;
+      padding: 3px 5px;
+      box-shadow: 1px 1px 3px 0 rgba(0, 0, 0, .4);
+      cursor: pointer;
+      min-width: 32px;
+      text-align: center;
+
+      &:hover {
+        box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, .8);
+        background-color: @grey-200;
+      }
+    }
+
+    .label {
+      font-size: 18px;
+      font-weight: bold;
+      color: @grey-50;
+      width: 2%;
+      text-align: center;
+    }
+
+    #state-slider {
+      width: 100%;
+      cursor: pointer;
+    }
+  }
+}

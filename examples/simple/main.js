@@ -67,16 +67,7 @@ var create = function () {
     this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.tim, PhaserReverse.Creators.SPRITE);
     this.stateManipulator.registerMemorable(this.fadeOutTween, PhaserReverse.Creators.TWEEN);
-    this.debugger = new PhaserReverse.Debugger(game);
-
-    document.getElementById('state-slider-wrapper').style.width = game.width + 'px';
-    this.stateSlider = document.getElementById('state-slider');
-    this.stateSlider.oninput = function (evt) {
-        game.paused = true;
-        document.getElementById('state-slider-label').innerHTML = this.value;
-        stateManipulator.restoreSnapshot(stateManipulator._snapshots[this.value - 1]);
-    };
-
+    this.debugger = new PhaserReverse.Debugger(game, stateManipulator, {bindKeys:  true});
     window.mainState = this;
 };
 
@@ -87,6 +78,7 @@ var update = function () {
 
     if (this.shiftKey.isDown) {
         this.stateManipulator.shift();
+        this.debugger.update();
         return true;
     }
 
@@ -111,9 +103,7 @@ var update = function () {
     }
 
     this.stateManipulator.takeSnapshot();
-    this.stateSlider.max = this.stateManipulator.getSnapshotsAmount();
-    this.stateSlider.value = this.stateManipulator.getSnapshotsAmount();
-    document.getElementById('state-slider-label').innerHTML = this.stateSlider.value;
+    this.debugger.update();
 };
 
 var preRender = function () {

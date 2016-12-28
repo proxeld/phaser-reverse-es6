@@ -83,8 +83,8 @@ gulp.task('js', function () {
         entries: ['src/app.es6'],
         // single global variable for the library
         // this will be available in the browser if bundle will be loaded using html script tag
-        standalone: 'LibraryName'
-    }))
+        standalone: 'PhaserReverse'
+    }));
 });
 
 

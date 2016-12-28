@@ -3,42 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Simple Phaser Reverse use example</title>
-    <div id="state-slider-wrapper">
-        <label for="state-slider" id="state-slider-label">0</label>
-        <input type="range" value="0" min="1" max="1" step="1" id="state-slider"/>
-        <button class="manipulator forward">+</button>
-        <button class="manipulator backward">-</button>
-    </div>
-    <style type="text/css">
+    <style>
         body {
             margin: 0;
         }
-
-        #state-slider-wrapper {
-            position: absolute;
-            width: 100%;
-            background-color: rgba(0, 128, 128, 0.4);
-            color: white;
-        }
-
-        #state-slider {
-            float: left;
-            width: 85%;
-            margin: 0;
-        }
-        #state-slider-label {
-            float: left;
-            width: 5%;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .manipulator {
-            display: inline;
-            font-weight: bold;
-            width: 4%;
-        }
-
     </style>
 </head>
 <body>

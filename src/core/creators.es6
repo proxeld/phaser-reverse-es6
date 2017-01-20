@@ -43,6 +43,9 @@ const creators = {
         primitives: ['velocity.x', 'velocity.y', 'data.position.0', 'data.position.1', 'angularForce',
             'angularVelocity', 'damping', 'x', 'y', 'rotation'],
     }),
+    BODY_NINJA: new MementoCreator({
+        primitives: ['touching', 'wasTouching', 'velocity.x', 'velocity.y', 'x', 'y'],
+    }),
     TWEEN_MANAGER: new MementoCreator({
         arrays: {
             _tweens: undefined,
@@ -105,6 +108,8 @@ creators.SPRITE = new MementoCreator({
                         return creators.BODY_ARCADE.create(originator.body);
                     case Phaser.Physics.P2JS:
                         return creators.BODY_P2JS.create(originator.body);
+                    case Phaser.Physics.NINJA:
+                        return creators.BODY_NINJA.create(originator.body);
                     default:
                         throw Error(`Unknown body type: ${originator.body.type}`);
                 }
@@ -116,6 +121,9 @@ creators.SPRITE = new MementoCreator({
                         break;
                     case Phaser.Physics.P2JS:
                         creators.BODY_P2JS.restore(originator.body, memento);
+                        break;
+                    case Phaser.Physics.NINJA:
+                        creators.BODY_NINJA.restore(originator.body, memento);
                         break;
                     default:
                         throw Error(`Unknown body type: ${originator.body.type}`);

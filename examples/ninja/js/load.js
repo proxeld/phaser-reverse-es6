@@ -8,15 +8,14 @@ var loadState = {
         In this case of loading, only text is placed...
         */
 
-        game.time.advancedTiming = true;
         var loadingLabel = game.add.text(80, 150, 'loading...', {font: '30px Courier', fill: '#fff'});
 
         //Load your images, spritesheets, bitmaps...
         game.load.image('obstacle', 'assets/obstacle.png');
-        game.load.image('deadzone', 'assets/deadzone.png');
-        game.load.image('world2Bg', 'assets/world2.png');
 
-        game.load.atlasJSONHash('dude', 'assets/dude.png', 'assets/dude.json');
+        game.load.spritesheet('ninja-tiles', 'assets/ninja-tiles128.png', 128, 128, 34);
+
+        game.load.atlasJSONHash('guy', 'assets/guy.png', 'assets/guy.json');
         game.load.atlasJSONHash('platforms', 'assets/platforms.png', 'assets/platforms.json');
 
         //Load your sounds, efx, music...

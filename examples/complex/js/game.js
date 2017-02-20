@@ -3,31 +3,37 @@ var worldWidth = 3000;
 var worldHeight = 900;
 var multiplier = new Multiplier();
 
-var obstaclesMeta = [
+var objectsMeta = [
     {x: 880, y: 750, w: 270, h: 40, type: 'deadzone'},
     {x: 0, y: 780, w: 3000, h: 200, type: 'obstacle'},
     {x: 310, y: 600, w: 240, h: 40, type: 'obstacle'},
     {x: 610, y: 500, w: 240, h: 40, type: 'obstacle'},
     {x: 850, y: 500, w: 30, h: 280, type: 'obstacle'},
     {x: 1150, y: 500, w: 30, h: 280, type: 'obstacle'},
-    {x: 1170, y: 500, w: 240, h: 40, type: 'obstacle'}
+    {x: 1170, y: 500, w: 240, h: 40, type: 'obstacle'},
+    {x: 200, y: 530, scale: 0.6, type: 'ladder', bb: [32, 300, 40, 50]}
 ];
 
-function generateObstacles(group, spec) {
+function generateObjects(group, spec) {
     for (var i = 0; i < spec.length; ++i) {
-        var obstacle = spec[i];
-        var s = group.create(obstacle.x, obstacle.y, obstacle.type);
+        var object = spec[i];
+        var s = group.create(object.x, object.y, object.type);
         game.physics.arcade.enable(s);
         s.body.immovable = true;
 
-        if (obstacle.scale) {
-            s.scale.setTo(obstacle.scale);
+        if (object.scale) {
+            s.scale.setTo(object.scale);
         } else {
-            var scaleX = (obstacle.w / s.width);
-            var scaleY = (obstacle.h / s.height);
+            var scaleX = (object.w / s.width);
+            var scaleY = (object.h / s.height);
             s.scale.setTo(scaleX, scaleY);
         }
-        // s.visible = false;
+
+        if (object.bb) {
+            s.body.setSize(object.bb[0], object.bb[1], object.bb[2], object.bb[3]);
+        }
+
+        s.visible = object.visible == undefined ? true : object.visible;
     }
 }
 
@@ -37,31 +43,42 @@ var gameState = {
     create: function () {
 
         game.world.setBounds(0, 0, worldWidth, worldHeight);
-        game.add.tileSprite(0, 0, worldWidth, worldHeight, 'world2Bg');
+        this.background = game.add.tileSprite(0, 0, worldWidth, worldHeight, 'world2Bg');
 
         // groups & physics
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         // sprites
-        dude = new Dude();
         // game.add.sprite(300, 590, 'platforms', 'platform2.png');
         // game.add.sprite(600, 490, 'platforms', 'platform2.png');
         // game.add.sprite(830, 610, 'platforms', 'platform4.png');
 
 
-
         this.killers = game.add.group();
         this.obstacles = game.add.group();
+        this.ladders = game.add.group();
 
         // killing elements
-        generateObstacles(this.killers, obstaclesMeta.filter(function (o) {
+        generateObjects(this.killers, objectsMeta.filter(function (o) {
             return o.type == 'deadzone'
         }));
 
         // obstacles
-        generateObstacles(this.obstacles, obstaclesMeta.filter(function (o) {
+        generateObjects(this.obstacles, objectsMeta.filter(function (o) {
             return o.type == 'obstacle'
         }));
+
+        // ladders
+        generateObjects(this.ladders, objectsMeta.filter(function (o) {
+            return o.type == 'ladder';
+        }));
+
+        // hero
+        dude = new Dude({
+            layers: {
+                ladders: this.ladders
+            }
+        });
 
         // text
         this.multiplierLbl = game.add.text(dude.sprite.left, dude.sprite.top - 30, '');
@@ -78,6 +95,7 @@ var gameState = {
         // phaser reverse
         this.stateManipulator = new PhaserReverse.StateManipulator();
         this.stateManipulator.registerMemorable(dude.sprite, PhaserReverse.Creators.SPRITE);
+        this.stateManipulator.registerMemorable(dude, DudeMementoCreator);
         this.debugger = new PhaserReverse.Debugger(game, this.stateManipulator, {toolbar: true});
         this.shiftKey.onUp.add(function () {
             this.stateManipulator.discardFutureSnapshots();
@@ -116,21 +134,9 @@ var gameState = {
         game.physics.arcade.collide(dude.sprite, this.obstacles);
         game.physics.arcade.collide(dude.sprite, this.killers, dude.kill, null, dude);
 
-        dude.stopMovement();
+        dude.update();
 
-        if (!dude.isDead()) {
-            var leftDown = this.leftKey.isDown;
-            var rightDown = this.rightKey.isDown;
-
-            if (leftDown) {
-                dude.moveLeft();
-            } else if (rightDown) {
-                dude.moveRight();
-            }
-
-            // determine animation
-            dude.handleAnimation(leftDown, rightDown, this.upKey.isDown);
-        }
+        this.background.tilePosition.x = game.camera.position.x * 0.1;
 
         this.stateManipulator.takeSnapshot();
         this.debugger.update();
@@ -141,6 +147,7 @@ var gameState = {
         game.debug.spriteInfo(dude.sprite, 300, 200);
         game.debug.bodyInfo(dude.sprite, 700, 200);
         // game.debug.body(dude.sprite);
+        // game.debug.body(this.ladders.getAt(0));
         this.debugger.stateManipulatorInfo(this.stateManipulator, 50, 120, '#1c1c1c');
     }
 };

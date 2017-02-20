@@ -2,7 +2,19 @@
  * Created by proxeld on 18.02.17.
  */
 
-function Dude() {
+var DudeState = {
+    IDLE: 0,
+    RUNNING: 1,
+    JUMP: 2,
+    JUMP_STRAIGHT: 3,
+    FALLING: 4,
+    FALLING_STRAIGHT: 5,
+    CLIMBING: 6
+};
+
+
+function Dude(data) {
+    var speed = 250;
 
     sprite = game.add.sprite(60, 680, 'dude', 'idle 1.png');
     sprite.scale.setTo(0.75);
@@ -24,16 +36,26 @@ function Dude() {
     sprite.animations.add('up-down-transition-straight', Phaser.Animation.generateFrameNames('up-down_transition_straight ', 1, 4, '.png'), 10);
     sprite.animations.add('falling', Phaser.Animation.generateFrameNames('falling_downward ', 1, 3, '.png'), 10, true);
     sprite.animations.add('flying', Phaser.Animation.generateFrameNames('flying_upward ', 1, 3, '.png'), 10);
+    sprite.animations.add('climb-vertical', Phaser.Animation.generateFrameNames('climbing_vertically ', 1, 8, '.png'), 10);
 
     this.sprite = sprite;
+    this.state = DudeState.IDLE;
+
+    this.keys = {
+        left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
+        right: game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
+        up: game.input.keyboard.addKey(Phaser.Keyboard.UP),
+        down: game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
+        space: game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+    };
 
     this.moveLeft = function () {
-        sprite.body.velocity.x = -250;
+        sprite.body.velocity.x = -speed;
         sprite.scale.x = -0.75;
     };
 
     this.moveRight = function () {
-        sprite.body.velocity.x = 250;
+        sprite.body.velocity.x = speed;
         sprite.scale.x = 0.75;
     };
 
@@ -41,58 +63,22 @@ function Dude() {
         sprite.body.velocity.x = 0;
     };
 
-    this.handleAnimation = function (leftDown, rightDown, upDown) {
-        var currentAnimName = sprite.animations.currentAnim.name;
-        var inAir = !sprite.body.touching.down;
-        var falling = sprite.body.velocity.y > 0;
-        var movesHorizon = (sprite.body.velocity.x != 0);
+    this.moveUp = function () {
+        sprite.body.velocity.y = -speed / 2;
+    };
 
-        if (inAir) {
-            if (falling && currentAnimName != 'falling' && movesHorizon) {
-                sprite.animations.play('up-down-transition').onComplete.addOnce(function () {
-                    sprite.animations.play('falling');
-                });
-            }
-        } else {
+    this.moveDown = function () {
+        sprite.body.velocity.y = speed / 2;
+    };
 
-            if (leftDown) {
-                sprite.animations.play('run');
-
-            } else if (rightDown) {
-                sprite.animations.play('run');
-
-            } else {
-                sprite.animations.stop('run');
-            }
-
-            //  Allow the player to jump if they are touching the ground.
-            if (upDown) {
-                if (movesHorizon) {
-                    sprite.animations.play('flying', 20).onComplete.addOnce(function () {
-                        if (sprite.body.velocity.y < 0) {
-                            sprite.animations.play('flying');
-                        }
-                    });
-                } else {
-                    sprite.animations.play('jump-prep-straight', 10).onComplete.addOnce(function () {
-                        if (sprite.body.velocity.y < 0) {
-                            sprite.animations.play('up-down-transition-straight');
-                        }
-                    });
-                }
-                sprite.body.velocity.y = -600;
-            }
-
-            if (sprite.animations.currentAnim.isFinished || currentAnimName == 'falling') {
-                sprite.animations.play('idle');
-            }
-        }
+    this.jump = function () {
+        sprite.body.velocity.y = -600;
     };
 
     this.isDead = function () {
         var caName = sprite.animations.currentAnim.name;
         return caName === 'death' || caName === 'deathLoop';
-    }
+    };
 
     this.kill = function () {
         if (!this.isDead()) {
@@ -100,5 +86,176 @@ function Dude() {
                 sprite.animations.play('deathLoop');
             });
         }
+    };
+
+    this.overlapsWithAnyLadder = function () {
+        var ladderBodies = [];
+
+        return game.physics.arcade.collide(sprite, data.layers.ladders, null);
+    };
+
+    this.transitionToState = function (state) {
+        console.log('Changing from state', this.state, 'to', state);
+
+        // actions when entering to state
+        switch (state) {
+            case DudeState.IDLE:
+                sprite.animations.play('idle');
+                break;
+            case DudeState.RUNNING:
+                sprite.animations.play('run', null, true);
+                break;
+            case DudeState.JUMP:
+                this.jump();
+                sprite.animations.play('flying');
+                break;
+            case DudeState.JUMP_STRAIGHT:
+                this.jump();
+                sprite.animations.play('jump-prep-straight');
+                break;
+            case DudeState.FALLING:
+                sprite.animations.play('up-down-transition').onComplete.addOnce(function () {
+                    sprite.animations.play('falling');
+                });
+                break;
+            case DudeState.FALLING_STRAIGHT:
+                sprite.animations.play('up-down-transition-straight');
+                break;
+            case DudeState.CLIMBING:
+                sprite.body.gravity.y = 0;
+                break;
+            default:
+                console.warn('No entry action for state', state);
+        }
+
+        // actions when exiting state
+        switch (this.state) {
+            case DudeState.CLIMBING:
+                sprite.body.gravity.y = 900;
+                break;
+            default:
+                // console.warn('No exit action for state', state);
+                break;
+        }
+
+        this.state = state;
+    };
+
+    this.handleInput = function () {
+        switch (this.state) {
+            case DudeState.IDLE:
+
+                if (this.keys.left.isDown || this.keys.right.isDown) {
+                    this.transitionToState(DudeState.RUNNING);
+                }
+
+                if (this.keys.space.isDown) {
+                    if (sprite.body.velocity.x == 0) {
+                        this.transitionToState(DudeState.JUMP_STRAIGHT);
+                    } else {
+                        this.transitionToState(DudeState.JUMP);
+                    }
+                }
+
+                if (this.keys.up.isDown && this.overlapsWithAnyLadder()) {
+                    this.transitionToState(DudeState.CLIMBING);
+                }
+
+                break;
+            case DudeState.RUNNING:
+                if (this.keys.left.isDown) {
+                    this.moveLeft();
+                } else if (this.keys.right.isDown) {
+                    this.moveRight();
+                } else {
+                    this.transitionToState(DudeState.IDLE);
+                }
+
+                if (this.keys.space.isDown) {
+                    if (sprite.body.velocity.x == 0) {
+                        this.transitionToState(DudeState.JUMP_STRAIGHT);
+                    } else {
+                        this.transitionToState(DudeState.JUMP);
+                    }
+                }
+
+                break;
+            case DudeState.JUMP:
+            case DudeState.JUMP_STRAIGHT:
+                var falling = sprite.body.velocity.y > 0;
+
+                if (this.keys.left.isDown) {
+                    this.moveLeft();
+                } else if (this.keys.right.isDown) {
+                    this.moveRight();
+                }
+
+                if (falling) {
+                    if (sprite.body.velocity.x == 0) {
+                        this.transitionToState(DudeState.FALLING_STRAIGHT);
+                    } else {
+                        this.transitionToState(DudeState.FALLING);
+                    }
+                }
+
+                break;
+            case DudeState.FALLING:
+            case DudeState.FALLING_STRAIGHT:
+                var touchedGround = sprite.body.touching.down;
+
+                if (this.keys.left.isDown) {
+                    this.moveLeft();
+                } else if (this.keys.right.isDown) {
+                    this.moveRight();
+                }
+
+                if (touchedGround) {
+                    this.transitionToState(DudeState.IDLE);
+                }
+
+                break;
+            case DudeState.CLIMBING:
+                var onLadder = this.overlapsWithAnyLadder();
+
+                if (!onLadder) {
+                    this.transitionToState(DudeState.FALLING);
+                } else {
+                    if (this.keys.up.isDown) {
+                        sprite.animations.play('climb-vertical');
+                        this.moveUp();
+                    } else if (this.keys.down.isDown) {
+                        sprite.animations.play('climb-vertical');
+                        this.moveDown();
+                    } else {
+                        sprite.body.velocity.y = 0;
+                    }
+
+                    if (this.keys.left.isDown) {
+                        this.moveLeft();
+                    } else if (this.keys.right.isDown) {
+                        this.moveRight();
+                    }
+
+                    if (this.keys.space.isDown) {
+                        this.transitionToState(DudeState.FALLING_STRAIGHT);
+                    }
+                }
+
+                break;
+            default:
+                console.warn('State not handled!', this.state);
+                this.transitionToState(DudeState.IDLE);
+        }
+    };
+
+    this.update = function () {
+
+        this.stopMovement();
+
+        this.handleInput();
     }
 }
+
+var DudeMementoCreator = new PhaserReverse.MementoCreator({
+    primitives: ['state']
+});

@@ -21,24 +21,36 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-import MementoCreator from './core/memento-creator.es6';
-import StateManipulator from './core/state-manipulator.es6';
-import Creators from './core/creators.es6';
-import Debugger from './utils/debugger.es6';
-import Multiplier from './utils/multiplier.es6';
 
-console.log(
-    '%c⏳ PhaserReverse (v0.0.1) ⏳ Made with %c♥%c by proxeld',
-    'background: #222; color: #bada55',
-    'background: #222; color: #ff1111',
-    'background: #222; color: #bada55'
-);
-
-// Library API
-export {
-    MementoCreator,
-    StateManipulator,
-    Creators,
-    Debugger,
-    Multiplier
+const defaults = {
+    range: [-8, -4, -2, -1, 0, 1, 2, 4, 8],
+    initialIndex: 3
 };
+
+export default class Multiplier {
+
+    constructor(range = defaults.range, initialIndex = defaults.initialIndex) {
+        this._range = range;
+        this._initialIndex = initialIndex;
+        this._currentMultiplierIndex = initialIndex;
+    }
+
+    reset() {
+        this._currentMultiplierIndex = this._initialIndex;
+        return this.current();
+    }
+
+    next() {
+        this._currentMultiplierIndex = Math.min(this._currentMultiplierIndex + 1, this._range.length - 1);
+        return this.current();
+    }
+
+    previous() {
+        this._currentMultiplierIndex = Math.max(this._currentMultiplierIndex - 1, 0);
+        return this.current();
+    }
+
+    current() {
+        return this._range[this._currentMultiplierIndex];
+    }
+}

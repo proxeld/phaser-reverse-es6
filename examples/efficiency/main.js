@@ -32,30 +32,6 @@ function getRandomFromRange(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function Multiplier() {
-    var multipliers = [-32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16];
-    var initialMultiplierIndex = 5;
-    var currentMultiplierIndex = initialMultiplierIndex;
-
-    this.reset = function () {
-        currentMultiplierIndex = initialMultiplierIndex;
-    };
-
-    this.next = function () {
-        currentMultiplierIndex = Math.min(currentMultiplierIndex + 1, multipliers.length - 1);
-        return multipliers[currentMultiplierIndex];
-    };
-
-    this.prev = function () {
-        currentMultiplierIndex = Math.max(currentMultiplierIndex - 1, 0);
-        return multipliers[currentMultiplierIndex];
-    };
-
-    this.current = function () {
-        return multipliers[currentMultiplierIndex];
-    }
-}
-
 
 var preload = function () {
     game.load.image('fellow', '../img/fellow.png');
@@ -67,7 +43,7 @@ var create = function () {
     game.world.setBounds(0, 0, 1600, 900);
     game.physics.startSystem(Phaser.Physics.ARCADE);
     stateManipulator = new PhaserReverse.StateManipulator();
-    multiplier = new Multiplier();
+    multiplier = new PhaserReverse.Multiplier([-16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16], 4);
 
 
     for (var i = 0; i < OBJECTS + OBJECTS_INVARIABLE; ++i) {
@@ -94,7 +70,7 @@ var create = function () {
 
     this.downKey.onDown.add(function () {
         if (this.shiftKey.isDown) {
-            multiplier.prev();
+            multiplier.previous();
         }
     }, this);
 

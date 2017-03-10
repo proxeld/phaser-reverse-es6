@@ -24,19 +24,19 @@
 
 const defaults = {
     range: [-8, -4, -2, -1, 0, 1, 2, 4, 8],
-    initialIndex: 3
+    resetIndex: 3
 };
 
 export default class Multiplier {
 
-    constructor(range = defaults.range, initialIndex = defaults.initialIndex) {
+    constructor(range = defaults.range, resetIndex = defaults.resetIndex) {
         this._range = range;
-        this._initialIndex = initialIndex;
-        this._currentMultiplierIndex = initialIndex;
+        this._resetIndex = Math.min(resetIndex, this._range.length - 1);
+        this.reset();
     }
 
     reset() {
-        this._currentMultiplierIndex = this._initialIndex;
+        this._currentMultiplierIndex = this._resetIndex;
         return this.current();
     }
 

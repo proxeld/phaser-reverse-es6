@@ -11,7 +11,8 @@ var objectsMeta = [
     {x: 850, y: 500, w: 30, h: 280, type: 'obstacle'},
     {x: 1150, y: 500, w: 30, h: 280, type: 'obstacle'},
     {x: 1170, y: 500, w: 240, h: 40, type: 'obstacle'},
-    {x: 200, y: 530, scale: 0.6, type: 'ladder', bb: [32, 300, 40, 50]}
+    {x: 200, y: 530, scale: 0.6, type: 'ladder', bb: [32, 300, 40, 50]},
+    {x: 500, y: 540, scale: 0.75, type: 'fence', bb: [370, 240, 50, 50]}
 ];
 
 function generateObjects(group, spec) {
@@ -55,8 +56,8 @@ var gameState = {
 
 
         this.killers = game.add.group();
-        this.obstacles = game.add.group();
         this.ladders = game.add.group();
+        this.obstacles = game.add.group();
 
         // killing elements
         generateObjects(this.killers, objectsMeta.filter(function (o) {
@@ -70,7 +71,7 @@ var gameState = {
 
         // ladders
         generateObjects(this.ladders, objectsMeta.filter(function (o) {
-            return o.type == 'ladder';
+            return o.type == 'ladder' || o.type == 'fence';
         }));
 
         // hero
@@ -136,7 +137,7 @@ var gameState = {
 
         dude.update();
 
-        this.background.tilePosition.x = game.camera.position.x * 0.1;
+        // this.background.tilePosition.x = game.camera.position.x * 0.1;
 
         this.stateManipulator.takeSnapshot();
         this.debugger.update();
@@ -147,7 +148,7 @@ var gameState = {
         game.debug.spriteInfo(dude.sprite, 300, 200);
         game.debug.bodyInfo(dude.sprite, 700, 200);
         // game.debug.body(dude.sprite);
-        // game.debug.body(this.ladders.getAt(0));
+        // game.debug.body(this.ladders.getAt(1));
         this.debugger.stateManipulatorInfo(this.stateManipulator, 50, 120, '#1c1c1c');
     }
 };

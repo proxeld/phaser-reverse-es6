@@ -15,6 +15,7 @@ var loadState = {
         game.load.image('obstacle', 'assets/obstacle.png');
         game.load.image('deadzone', 'assets/deadzone.png');
         game.load.image('ladder', 'assets/ladder.png');
+        game.load.image('fence', 'assets/fence.png');
         game.load.image('world2Bg', 'assets/world2.png');
 
         game.load.atlasJSONHash('dude', 'assets/dude.png', 'assets/dude.json');

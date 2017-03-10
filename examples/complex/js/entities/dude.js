@@ -9,21 +9,23 @@ var DudeState = {
     JUMP_STRAIGHT: 3,
     FALLING: 4,
     FALLING_STRAIGHT: 5,
-    CLIMBING: 6
+    CLIMBING: 6,
+    DEAD: 7
 };
 
 
 function Dude(data) {
-    var speed = 250;
+    var speed = 350;
 
     sprite = game.add.sprite(60, 680, 'dude', 'idle 1.png');
-    sprite.scale.setTo(0.75);
     sprite.anchor.setTo(0.5, 0);
 
     // enable physics
     game.physics.arcade.enable(sprite);
     sprite.body.gravity.y = 900;
     sprite.body.collideWorldBounds = true;
+    sprite.body.setSize(sprite.width, sprite.height, 0, 0);
+    sprite.scale.setTo(0.75);
     // sprite.body.setSize(80, 120, 0, 0);
 
     // animation
@@ -37,6 +39,7 @@ function Dude(data) {
     sprite.animations.add('falling', Phaser.Animation.generateFrameNames('falling_downward ', 1, 3, '.png'), 10, true);
     sprite.animations.add('flying', Phaser.Animation.generateFrameNames('flying_upward ', 1, 3, '.png'), 10);
     sprite.animations.add('climb-vertical', Phaser.Animation.generateFrameNames('climbing_vertically ', 1, 8, '.png'), 10);
+    sprite.animations.add('climb-horizontal', Phaser.Animation.generateFrameNames('climbing_horizontally ', 1, 8, '.png'), 10);
 
     this.sprite = sprite;
     this.state = DudeState.IDLE;
@@ -63,34 +66,35 @@ function Dude(data) {
         sprite.body.velocity.x = 0;
     };
 
-    this.moveUp = function () {
+    this.climbUp = function () {
         sprite.body.velocity.y = -speed / 2;
     };
 
-    this.moveDown = function () {
+    this.climbDown = function () {
         sprite.body.velocity.y = speed / 2;
+    };
+
+    this.climbLeft = function () {
+        sprite.body.velocity.x = -speed / 2;
+        sprite.scale.x = -0.75;
+    };
+
+    this.climbRight = function () {
+        sprite.body.velocity.x = speed / 2;
+        sprite.scale.x = 0.75;
     };
 
     this.jump = function () {
         sprite.body.velocity.y = -600;
     };
 
-    this.isDead = function () {
-        var caName = sprite.animations.currentAnim.name;
-        return caName === 'death' || caName === 'deathLoop';
-    };
-
     this.kill = function () {
-        if (!this.isDead()) {
-            sprite.animations.play('death').onComplete.addOnce(function () {
-                sprite.animations.play('deathLoop');
-            });
+        if (!(this.state == DudeState.DEAD)) {
+            this.transitionToState(DudeState.DEAD);
         }
     };
 
     this.overlapsWithAnyLadder = function () {
-        var ladderBodies = [];
-
         return game.physics.arcade.collide(sprite, data.layers.ladders, null);
     };
 
@@ -123,6 +127,11 @@ function Dude(data) {
                 break;
             case DudeState.CLIMBING:
                 sprite.body.gravity.y = 0;
+                break;
+            case DudeState.DEAD:
+                sprite.animations.play('death').onComplete.addOnce(function () {
+                    sprite.animations.play('deathLoop');
+                });
                 break;
             default:
                 console.warn('No entry action for state', state);
@@ -163,12 +172,22 @@ function Dude(data) {
 
                 break;
             case DudeState.RUNNING:
+                var falling = sprite.body.velocity.y > 0;
+
                 if (this.keys.left.isDown) {
                     this.moveLeft();
                 } else if (this.keys.right.isDown) {
                     this.moveRight();
                 } else {
                     this.transitionToState(DudeState.IDLE);
+                }
+
+                if (falling) {
+                    if (sprite.body.velocity.x == 0) {
+                        this.transitionToState(DudeState.FALLING_STRAIGHT);
+                    } else {
+                        this.transitionToState(DudeState.FALLING);
+                    }
                 }
 
                 if (this.keys.space.isDown) {
@@ -203,6 +222,10 @@ function Dude(data) {
             case DudeState.FALLING_STRAIGHT:
                 var touchedGround = sprite.body.touching.down;
 
+                if ((this.keys.up.isDown || this.keys.down.isDown) && this.overlapsWithAnyLadder()) {
+                    this.transitionToState(DudeState.CLIMBING);
+                }
+
                 if (this.keys.left.isDown) {
                     this.moveLeft();
                 } else if (this.keys.right.isDown) {
@@ -222,18 +245,20 @@ function Dude(data) {
                 } else {
                     if (this.keys.up.isDown) {
                         sprite.animations.play('climb-vertical');
-                        this.moveUp();
+                        this.climbUp();
                     } else if (this.keys.down.isDown) {
                         sprite.animations.play('climb-vertical');
-                        this.moveDown();
+                        this.climbDown();
                     } else {
                         sprite.body.velocity.y = 0;
                     }
 
-                    if (this.keys.left.isDown) {
-                        this.moveLeft();
-                    } else if (this.keys.right.isDown) {
-                        this.moveRight();
+                    if (!sprite.body.velocity.y && this.keys.left.isDown) {
+                        this.climbLeft();
+                        sprite.animations.play('climb-horizontal');
+                    } else if (!sprite.body.velocity.y && this.keys.right.isDown) {
+                        this.climbRight();
+                        sprite.animations.play('climb-horizontal');
                     }
 
                     if (this.keys.space.isDown) {
@@ -241,6 +266,8 @@ function Dude(data) {
                     }
                 }
 
+                break;
+            case DudeState.DEAD:
                 break;
             default:
                 console.warn('State not handled!', this.state);

@@ -19397,11 +19397,11 @@ Phaser.Group.prototype.sendToBack = function (child) {
 /**
 * Moves the given child up one place in this group unless it's already at the top.
 *
-* @method Phaser.Group#moveUp
+* @method Phaser.Group#climbUp
 * @param {any} child - The child to move up in the group.
 * @return {any} The child that was moved.
 */
-Phaser.Group.prototype.moveUp = function (child) {
+Phaser.Group.prototype.climbUp = function (child) {
 
     if (child.parent === this && this.getIndex(child) < this.children.length - 1)
     {
@@ -19421,11 +19421,11 @@ Phaser.Group.prototype.moveUp = function (child) {
 /**
 * Moves the given child down one place in this group unless it's already at the bottom.
 *
-* @method Phaser.Group#moveDown
+* @method Phaser.Group#climbDown
 * @param {any} child - The child to move down in the group.
 * @return {any} The child that was moved.
 */
-Phaser.Group.prototype.moveDown = function (child) {
+Phaser.Group.prototype.climbDown = function (child) {
 
     if (child.parent === this && this.getIndex(child) > 0)
     {
@@ -32180,11 +32180,11 @@ Phaser.Component.BringToTop.prototype.sendToBack = function() {
 * @method
 * @return {PIXI.DisplayObject} This instance.
 */
-Phaser.Component.BringToTop.prototype.moveUp = function () {
+Phaser.Component.BringToTop.prototype.climbUp = function () {
 
     if (this.parent)
     {
-        this.parent.moveUp(this);
+        this.parent.climbUp(this);
     }
 
     return this;
@@ -32201,11 +32201,11 @@ Phaser.Component.BringToTop.prototype.moveUp = function () {
 * @method
 * @return {PIXI.DisplayObject} This instance.
 */
-Phaser.Component.BringToTop.prototype.moveDown = function () {
+Phaser.Component.BringToTop.prototype.climbDown = function () {
 
     if (this.parent)
     {
-        this.parent.moveDown(this);
+        this.parent.climbDown(this);
     }
 
     return this;
@@ -32384,7 +32384,7 @@ Phaser.Component.Core.prototype = {
     * The z depth of this Game Object within its parent Group.
     * No two objects in a Group can have the same z value.
     * This value is adjusted automatically whenever the Group hierarchy changes.
-    * If you wish to re-order the layering of a Game Object then see methods like Group.moveUp or Group.bringToTop.
+    * If you wish to re-order the layering of a Game Object then see methods like Group.climbUp or Group.bringToTop.
     * @property {number} z
     * @readOnly
     */
@@ -76052,7 +76052,7 @@ Phaser.Physics.Ninja.Body.prototype = {
     * If this Body is dynamic then this will move it up by setting its y velocity to the given speed.
     * The speed is represented in pixels per second. So a value of 100 would move 100 pixels in 1 second (1000ms).
     *
-    * @method Phaser.Physics.Body#moveUp
+    * @method Phaser.Physics.Body#climbUp
     * @param {number} speed - The speed at which it should move up, in pixels per second.
     */
     moveUp: function (speed) {
@@ -76067,7 +76067,7 @@ Phaser.Physics.Ninja.Body.prototype = {
     * If this Body is dynamic then this will move it down by setting its y velocity to the given speed.
     * The speed is represented in pixels per second. So a value of 100 would move 100 pixels in 1 second (1000ms).
     *
-    * @method Phaser.Physics.Body#moveDown
+    * @method Phaser.Physics.Body#climbDown
     * @param {number} speed - The speed at which it should move down, in pixels per second.
     */
     moveDown: function (speed) {

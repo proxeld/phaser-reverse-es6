@@ -127,7 +127,7 @@ var gameState = {
         //  Allow the player to jump if they are touching the ground.
         if (this.upKey.isDown && guy.body.touching.down)
         {
-            guy.body.moveUp(420);
+            guy.body.climbUp(420);
         }
 
         this.stateManipulator.takeSnapshot();

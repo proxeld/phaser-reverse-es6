@@ -1,7 +1,7 @@
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update });
 
 function preload() {
-    game.load.image('sprite', '../img/fellow.png');
+    game.load.image('sprite', './img/fellow.png');
 }
 
 var sprite;

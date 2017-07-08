@@ -23,8 +23,8 @@
  */
 
 var preload = function () {
-    game.load.image('fellow', '../img/fellow.png');
-    game.load.spritesheet('tim', '../img/tim.png', 131, 151);
+    game.load.image('fellow', './img/fellow.png');
+    game.load.spritesheet('tim', './img/tim.png', 131, 151);
     game.time.advancedTiming = true;
 };
 

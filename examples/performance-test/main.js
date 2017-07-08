@@ -22,90 +22,92 @@
  SOFTWARE.
  */
 
+var OBJECTS = 80;
+var OBJECTS_INVARIABLE = 0;
+var sprites = [];
+var stateManipulator;
+var multiplier;
+
+function getRandomFromRange(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
 var preload = function () {
-    game.load.image('fellow', '../img/fellow.png');
-    game.load.spritesheet('tim', '../img/tim.png', 131, 151);
+    game.load.image('fellow', './img/fellow.png');
     game.time.advancedTiming = true;
 };
 
 var create = function () {
     game.stage.backgroundColor = '#182d3b';
     game.world.setBounds(0, 0, 1600, 900);
-
-    this.fellow = game.add.sprite(game.world.centerX, game.world.centerY, 'fellow');
-    this.fellow.scale.setTo(0.5);
-    this.fellow.anchor.setTo(0.5);
-
-    this.fellowWalking = game.add.sprite(game.world.centerX - 500, game.world.centerY + 300, 'fellow');
-    this.fellowWalking.scale.setTo(0.5);
-    this.fellowWalking.anchor.setTo(0.5);
-
-    this.tim = game.add.sprite(100, 150, 'tim');
-    this.tim.animations.add('run', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26], 20);
-    this.tim.anchor.setTo(0.5);
-
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.physics.arcade.enable(this.fellow);
-    game.physics.arcade.enable(this.fellowWalking);
-    game.physics.arcade.enable(this.tim);
-    game.camera.follow(this.tim);
+    stateManipulator = new PhaserReverse.StateManipulator();
+    multiplier = new PhaserReverse.Multiplier([-16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16], 4);
 
-    this.sKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+
+    for (var i = 0; i < OBJECTS + OBJECTS_INVARIABLE; ++i) {
+        var sprite = game.add.sprite(getRandomFromRange(0, 1600), getRandomFromRange(0, 900), 'fellow');
+        sprite.scale.setTo(0.5);
+        sprite.anchor.setTo(0.5);
+        game.physics.arcade.enable(sprite);
+        if (i < OBJECTS)
+            stateManipulator.registerMemorable(sprite, PhaserReverse.Creators.SPRITE);
+        sprites.push(sprite);
+    }
+
     this.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     this.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
     this.downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     this.shiftKey = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
 
-    var stateManipulator = new PhaserReverse.StateManipulator();
-    this.stateManipulator = stateManipulator;
-    this.stateManipulator.registerMemorable(this.fellow, PhaserReverse.Creators.SPRITE_BARE);
-    this.stateManipulator.registerMemorable(this.fellowWalking);
+
+    this.shiftKey.onUp.add(function () {
+        stateManipulator.discardFutureSnapshots();
+        multiplier.reset();
+    }, this);
+
+    this.downKey.onDown.add(function () {
+        if (this.shiftKey.isDown) {
+            multiplier.previous();
+        }
+    }, this);
+
+    this.upKey.onDown.add(function () {
+        if (this.shiftKey.isDown) {
+            multiplier.next();
+        }
+    }, this);
+
     this.debugger = new PhaserReverse.Debugger(game, stateManipulator, {bindKeys:  false, toolbar: false});
 };
 
-var preupdate = function () {
-    this.tim.body.velocity.x = 0;
-    this.tim.body.velocity.y = 0;
-
-    if (this.leftKey.isDown) {
-        this.tim.body.velocity.x = -200;
-        this.tim.animations.play('run');
-        this.tim.scale.x = -1;
-    } else if (this.rightKey.isDown) {
-        this.tim.body.velocity.x = 200;
-        this.tim.animations.play('run');
-        this.tim.scale.x = 1;
-    } else {
-        this.tim.animations.stop();
-    }
-};
 
 var update = function () {
-    this.fellow.angle += 0.5;
-    this.fellowWalking.x += 2;
+    sprites.forEach(function (sprite) {
+        sprite.angle += getRandomFromRange(0, 3);
+    });
 };
 
 var wrappedUpdate = function () {
-    preupdate.call(this);
 
-    if (this.leftKey.isDown) {
-        this.stateManipulator.shift();
-        this.stateManipulator.discardFutureSnapshots();
-        this.debugger.update();
-        return true;
-    } else if (this.rightKey.isDown) {
-        update.call(this);
+    update.call(this);
 
-        this.stateManipulator.takeSnapshot();
+    if (this.shiftKey.isDown) {
+        stateManipulator.shift(multiplier.current());
         this.debugger.update();
-    } else {
         return true;
     }
+
+
+    stateManipulator.takeSnapshot();
+    this.debugger.update();
 };
 
 var render = function () {
-    this.debugger.stateManipulatorInfo(this.stateManipulator, 1300, 100);
+    this.debugger.stateManipulatorInfo(stateManipulator, 1300, 100);
+    game.debug.text(game.time.fps || '--', game.width - 50, game.height - 100, null);
 };
 
 var game = new Phaser.Game(1600, 900, Phaser.AUTO, '', {

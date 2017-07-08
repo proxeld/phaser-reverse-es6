@@ -1,28 +1,34 @@
-es6-browserify-gulp-boilerplate
-===============================
+Phaser Reverse
+==============
 
-### Getting started
+## Usage
 
-```bash
-# clone repository
-git clone https://github.com/proxeld/es6-browserify-gulp-boilerplate.git es6-boilerplate
-cd es6-boilerplate
+Include Phaser Reverse bundle.js (or minified bundle) using tag script in your HTML code.
+Notice that Phaser Reverse assumes that Phaser library has already been loaded.
 
-# install dependencies
-npm install
+```
+<script type="text/javascript" src="lib/phaser.min.js"></script>
+<script type="text/javascript" src="lib/phaser-reverse.min.js"></script>
 ```
 
-To use gulp tasks you need to have gulp command available globally (`npm i gulp -g`) or you can use gulp from node_modules directory:
 
-```bash
-./node_modules/.bin/gulp
-```
+## Building & Testing
+
+### Prerequisites
+* Python (for http server)
+* Node, npm
+
+### Running project
+
+* clone repository
+* install dependencies (`npm install`)
+* use package.json scripts to build/test project (see below)
 
 For coverage information, you have to install `babel-cli` globally.
 
 ### Project structure
 
-This is the directory structure you will end up with following the instructions in the Installation Guide.
+This is the directory structure:
 
     |-- src 
     |   |-- js
@@ -49,14 +55,15 @@ To build final bundle (both minified and not minified) just type (in your consol
 npm run build
 ```
 
-You can configure destination of the bundle in `Gulpfile.js` file. By default it will be created in ```build``` directory.
-
 To watch for changes in source files and auto-build type:
 
 ```bash
 npm run watch
+```
 
-# or
+or
+
+```
 gulp watch
 ```
 
@@ -84,24 +91,7 @@ To check eslint rules compliance:
 ```bash
 npm run eslint
 ```
-
-### What should work out of the box:
-
-- ES6 (ECMAScript 2015) syntax in application code and tests (browserify, babel)
-- code transpilation after change detection (gulp, watchify, babel)
-- bundling into a single file (browserify)
-- bundling with minification (browserify, gulp-uglify) 
-- running tests from both console and browser (mocha, browserify)
-- getting code coverage (istanbul)
-
-
-### TODO List
+## TODO
 - snapshot minification
-- keys in memento object minification
-
-### What is problematic
-- how to handle objects when they are removed?
-    - prevent them from being garbage-collected?
-    - let them be garbage-collected and when manipulating time and 
-    encountering memento of removed object create new object of the 
-    same type and restore memento?
+- keys in memento object - minification
+- handling object remove/restore operations

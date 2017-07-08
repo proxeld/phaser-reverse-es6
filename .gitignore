@@ -20,5 +20,4 @@ coverage
 node_modules
 
 # Build files
-build/
 local/

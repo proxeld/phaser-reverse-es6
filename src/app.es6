@@ -21,13 +21,14 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+/* eslint no-console: ["error", { allow: ["info"] }] */
 import MementoCreator from './core/memento-creator.es6';
 import StateManipulator from './core/state-manipulator.es6';
 import Creators from './core/creators.es6';
 import Debugger from './utils/debugger.es6';
 import Multiplier from './utils/multiplier.es6';
 
-console.log(
+console.info(
     '%c⏳ PhaserReverse (v0.0.1) ⏳ Made with %c♥%c by proxeld',
     'background: #222; color: #bada55',
     'background: #222; color: #ff1111',
@@ -40,5 +41,5 @@ export {
     StateManipulator,
     Creators,
     Debugger,
-    Multiplier
+    Multiplier,
 };

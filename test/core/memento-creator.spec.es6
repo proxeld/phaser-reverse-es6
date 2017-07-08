@@ -136,7 +136,7 @@ describe('Memento Creator', () => {
             creator = new MementoCreator({
                 custom: {
                     position: {
-                        create: (memorable) =>
+                        create: memorable =>
                             `${memorable.position.x}, ${memorable.position.y}`,
                         restore: () => {},
                     },
@@ -321,7 +321,7 @@ describe('Memento Creator', () => {
             creator = new MementoCreator({
                 custom: {
                     position: {
-                        create: (memorable) =>
+                        create: memorable =>
                             `${memorable.position.x}, ${memorable.position.y}`,
                         restore: (memorable, value) => {
                             const parts = value.split(', ');
@@ -496,8 +496,8 @@ describe('Memento Creator', () => {
                 },
                 custom: {
                     'rot.angle': {
-                        create: (originator) => originator.rot.angle - 1,
-                        restore: (originator, value) => originator.rot = value,
+                        create: originator => originator.rot.angle - 1,
+                        restore: (originator, value) => (originator.rot = value),
                     },
                 },
                 arrays: {

@@ -24,7 +24,7 @@
 
 const defaults = {
     range: [-8, -4, -2, -1, 0, 1, 2, 4, 8],
-    resetIndex: 3
+    resetIndex: 3,
 };
 
 export default class Multiplier {

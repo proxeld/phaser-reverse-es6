@@ -21,13 +21,14 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+/* global Phaser */
 import MementoCreator from './memento-creator.es6';
 
 const creators = {
     ANIMATION: new MementoCreator({
         custom: {
             frame: {
-                create: (originator) => (originator ? originator.frame : {}),
+                create: originator => (originator ? originator.frame : {}),
                 restore: (originator, memento) => {
                     if (originator) {
                         originator.frame = originator._frames.indexOf(memento);
